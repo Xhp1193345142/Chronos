@@ -29,7 +29,7 @@ void main() {
   testWidgets('sample data stays labeled while navigating to goal controls', (
     tester,
   ) async {
-    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(find.text('演示数据'), findsOneWidget);
     expect(find.text('今天少用 42 分钟'), findsOneWidget);
     expect(find.byKey(const Key('today-duration')), findsOneWidget);
@@ -41,7 +41,7 @@ void main() {
   });
 
   testWidgets('selecting a day updates both trend charts', (tester) async {
-    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpWidget(const ChronosApp(demoOnly: true));
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
 
@@ -65,7 +65,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const Key('hour-15')));
     await tester.pumpAndSettle();

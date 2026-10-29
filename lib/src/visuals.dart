@@ -518,7 +518,9 @@ class _WeeklyBars extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({this.onExitDemo});
+
+  final VoidCallback? onExitDemo;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -555,27 +557,31 @@ class _Header extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: lime.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: lime.withValues(alpha: 0.27)),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.circle, size: 6, color: lime),
-              SizedBox(width: 6),
-              Text(
-                '演示数据',
-                style: TextStyle(
-                  color: lime,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+        InkWell(
+          onTap: onExitDemo,
+          borderRadius: BorderRadius.circular(100),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: lime.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(color: lime.withValues(alpha: 0.27)),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.circle, size: 6, color: lime),
+                SizedBox(width: 6),
+                Text(
+                  '演示数据',
+                  style: TextStyle(
+                    color: lime,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

@@ -1,7 +1,9 @@
 part of '../main.dart';
 
 class ChronosHome extends StatefulWidget {
-  const ChronosHome({super.key});
+  const ChronosHome({super.key, this.onExitDemo});
+
+  final VoidCallback? onExitDemo;
 
   @override
   State<ChronosHome> createState() => _ChronosHomeState();
@@ -24,7 +26,7 @@ class _ChronosHomeState extends State<ChronosHome> {
           constraints: const BoxConstraints(maxWidth: 610),
           child: Column(
             children: [
-              const _Header(),
+              _Header(onExitDemo: widget.onExitDemo),
               Expanded(
                 child: IndexedStack(
                   index: tab,

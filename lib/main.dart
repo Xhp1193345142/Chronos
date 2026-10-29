@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'demo_data.dart';
 
 part 'src/chronos_shell.dart';
+part 'src/live_data.dart';
+part 'src/live_shell.dart';
 part 'src/visuals.dart';
 
 const bg = Color(0xFF0B1020);
@@ -22,7 +25,9 @@ void main() {
 }
 
 class ChronosApp extends StatelessWidget {
-  const ChronosApp({super.key});
+  const ChronosApp({super.key, this.demoOnly = false});
+
+  final bool demoOnly;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -44,6 +49,6 @@ class ChronosApp extends StatelessWidget {
         overlayColor: lime.withValues(alpha: 0.12),
       ),
     ),
-    home: const ChronosHome(),
+    home: demoOnly || kIsWeb ? const ChronosHome() : const _LiveExperience(),
   );
 }

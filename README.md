@@ -1,6 +1,6 @@
 # Chronos · 柯罗诺斯
 
-一个以图表为核心的跨平台屏幕使用时间应用。目前仓库包含 **Flutter 视觉演示版**：今日、趋势和目标三页，使用明确标记的固定演示数据。今日页突出具体变化、24 小时轨迹和类别基线对比；趋势页支持点选最近七天查看时段与累计时长。它尚未读取系统数据，也不会发送真正的超时通知。
+一个以图表为核心的屏幕使用时间应用。仓库现在包含 **Android 真实数据预览版** 和明确标记的 Flutter 演示模式。Android 版可在用户授予“使用情况访问权限”后展示今日、七天与近 30 天的应用前台使用统计，并可设置一个组合目标；系统提醒由本地周期任务检查，实际送达仍需长期真机验证。iOS 目前只有演示界面，尚未接入 Apple 的受保护报告扩展。
 
 | 今日 | 趋势 | 目标 |
 | --- | --- | --- |
@@ -8,14 +8,14 @@
 
 [查看分类与平均值对比](docs/demo-categories.png)
 
-## 运行 Demo
+## 运行
 
 安装 Flutter 3.47 或更新的稳定版，然后在仓库根目录运行：
 
 ```sh
 flutter pub get
-flutter run -d chrome   # 在浏览器预览界面
-flutter run             # 选择已配置的 Android 或 iOS 设备
+flutter run -d chrome   # 浏览器始终展示带标记的演示数据
+flutter run -d <android-device-id>  # Android 真机可连接系统使用时间
 ```
 
 验证代码：
@@ -28,6 +28,8 @@ flutter test
 
 本机安装 iOS App 需要完整 Xcode；Android App 需要 Android SDK 和已配置的设备或模拟器。Web 构建仅用于快速预览界面，产品目标平台仍是 iOS 和 Android。
 
+Android 首次启动会说明权限用途。使用时间授权由用户在系统设置中开启；创建目标时才请求通知权限。统计与目标保存在设备本机，没有账号、后端或 AI 调用。某些设备会报告接近 24 小时的异常应用时长，Chronos 会在屏幕交互时长不支持该数值时将该日期标为不可核对，不纳入排名。
+
 ## 仓库约定
 
 所有开发提交都在 `dev` 分支完成，不创建其他开发分支。一次只允许一个编码对话修改工作区；其他模型可只读审查。具体规则见 [AGENTS.md](AGENTS.md) 和 [开发流程](docs/WORKFLOW.md)。
@@ -38,8 +40,9 @@ flutter test
 
 - [产品范围与验收](docs/PRODUCT.md)
 - [详细功能设计](docs/FUNCTIONAL_SPEC.md)
+- [当前实现与验证状态](docs/IMPLEMENTATION_STATUS.md)
 - [技术架构与平台数据边界](docs/ARCHITECTURE.md)
 - [视觉与交互规范](docs/DESIGN.md)
 - [Vibe coding 工作流程](docs/WORKFLOW.md)
 
-下一阶段是先在真实 iOS 和 Android 设备上验证系统使用时长授权、报告与超时提醒，再将演示数据源替换为各平台原生实现。
+下一阶段是验证 Android 目标通知的长期后台行为，并在具备完整 Xcode、iPhone 和 Family Controls entitlement 后实现 iOS 原生报告与监测。

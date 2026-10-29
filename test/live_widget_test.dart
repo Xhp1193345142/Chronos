@@ -1,0 +1,149 @@
+import 'package:chronos/main.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('chronos/native');
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  testWidgets('denied usage shows permission gateway without device totals', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': false, 'notificationsGranted': false};
+            case 'getGoal':
+              return null;
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    expect(find.text('连接设备使用时间'), findsOneWidget);
+    expect(find.byKey(const Key('live-today-total')), findsNothing);
+    await tester.tap(find.text('先看演示数据'));
+    await tester.pumpAndSettle();
+    expect(find.text('演示数据'), findsOneWidget);
+  });
+
+  testWidgets('partial days show missing data instead of a zero-duration bar', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': true, 'notificationsGranted': false};
+            case 'getGoal':
+              return null;
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            case 'snapshot':
+              return {
+                'state': 'partial',
+                'readAtMillis': DateTime(
+                  2026,
+                  10,
+                  29,
+                  16,
+                ).millisecondsSinceEpoch,
+                'days': List.generate(7, (index) {
+                  final available = index >= 3 && index != 4;
+                  return {
+                    'date': '2026-10-${23 + index}',
+                    'totalMinutes': index == 4
+                        ? 1439
+                        : available
+                        ? 90 + index * 5
+                        : 0,
+                    'available': available,
+                    'reason': index == 4 ? 'unreliable' : 'missing',
+                    'complete': available && index < 6,
+                    'hourly': null,
+                    'apps': available
+                        ? [
+                            {
+                              'id': 'com.example.video',
+                              'label': '视频',
+                              'minutes': 90 + index * 5,
+                              'category': '影音娱乐',
+                            },
+                          ]
+                        : [],
+                  };
+                }),
+              };
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-today-total')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('视频'), 200);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -200));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('视频'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('已知日期合计'), findsOneWidget);
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('趋势').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('无数据'), findsWidgets);
+    expect(find.text('最多和最少相差 10 分钟'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('revoked usage permission clears live totals', (tester) async {
+    var granted = true;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': granted, 'notificationsGranted': false};
+            case 'getGoal':
+              return null;
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            case 'snapshot':
+              return {
+                'state': 'ready',
+                'days': [
+                  {
+                    'date': '2026-10-29',
+                    'totalMinutes': 60,
+                    'available': true,
+                    'complete': false,
+                    'apps': [],
+                  },
+                ],
+              };
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('live-today-total')), findsOneWidget);
+    granted = false;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('使用权限已关闭'), findsOneWidget);
+    expect(find.byKey(const Key('live-today-total')), findsNothing);
+  });
+}

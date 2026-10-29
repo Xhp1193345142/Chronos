@@ -15,9 +15,11 @@ On iOS, the user selects apps through FamilyActivityPicker; Device Activity moni
 
 On Android, UsageStatsManager reads permitted app statistics after the user enables usage access. Background checks may be delayed by operating-system scheduling; reminder copy must not imply exact-to-the-minute triggering.
 
-## Demo implementation
+## Current implementation
 
-`lib/demo_data.dart` provides fixed, deterministic data. It is deliberately separate from future native adapters. The UI shows a persistent “演示数据” label. Goal edits are in-memory for this first visual demo.
+Android's `UsageReader` runs behind the `chronos/native` method channel and returns dated snapshots with explicit `available` and `reason` fields. It cross-checks aggregate app foreground time against screen-interactive time and suppresses clearly inconsistent dates. `GoalStore` keeps one local goal and insight preferences in private SharedPreferences. `GoalCheckJobService` schedules inexact periodic checks through JobScheduler and sends at most one notification per local date. The Flutter live pages never replace a permission or loading failure with demo values.
+
+`lib/demo_data.dart` still provides fixed, deterministic data for Web previews and the optional on-device demo. It is separate from the native adapter. Every demo page shows “演示数据”; demo goal edits remain in memory.
 
 The demo's hourly strips and cross-category baseline bars illustrate the intended reading experience. Their exact data granularity and composition on iOS must be validated inside the Device Activity Report extension before treating these Flutter charts as a production specification. Do not infer waking time, offline work, or a complete day from screen-use data.
 
