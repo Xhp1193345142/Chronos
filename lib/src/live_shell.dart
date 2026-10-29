@@ -112,8 +112,12 @@ class _LiveExperienceState extends State<_LiveExperience>
   Widget build(BuildContext context) {
     if (_demo) return ChronosHome(onExitDemo: _exitDemo);
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: lime)),
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: chronosColors(context).accent,
+          ),
+        ),
       );
     }
     if (_error != null) {
@@ -185,15 +189,21 @@ class _LiveExperienceState extends State<_LiveExperience>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.access_time_filled_rounded,
-                  color: lime,
+                  color: chronosColors(context).accent,
                   size: 46,
                 ),
                 const SizedBox(height: 28),
                 _Heading(title),
                 const SizedBox(height: 12),
-                Text(body, style: const TextStyle(color: sub, height: 1.5)),
+                Text(
+                  body,
+                  style: TextStyle(
+                    color: chronosColors(context).textSecondary,
+                    height: 1.5,
+                  ),
+                ),
                 const SizedBox(height: 26),
                 SizedBox(
                   width: double.infinity,
@@ -248,16 +258,16 @@ class _LiveExperienceState extends State<_LiveExperience>
                 padding: const EdgeInsets.fromLTRB(22, 15, 15, 10),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.access_time_filled_rounded,
-                      color: lime,
+                      color: chronosColors(context).accent,
                       size: 27,
                     ),
                     const SizedBox(width: 9),
-                    const Text(
+                    Text(
                       'CHRONOS',
                       style: TextStyle(
-                        color: ink,
+                        color: chronosColors(context).textPrimary,
                         fontSize: 15,
                         letterSpacing: 2,
                         fontWeight: FontWeight.w800,
@@ -268,7 +278,10 @@ class _LiveExperienceState extends State<_LiveExperience>
                     IconButton(
                       tooltip: '设置',
                       onPressed: _showSettings,
-                      icon: const Icon(Icons.settings_outlined, color: sub),
+                      icon: Icon(
+                        Icons.settings_outlined,
+                        color: chronosColors(context).textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -309,9 +322,13 @@ class _LiveExperienceState extends State<_LiveExperience>
         const _Heading('还没有可展示的使用记录'),
         const SizedBox(height: 14),
         _card(
-          const Text(
+          context,
+          Text(
             '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
-            style: TextStyle(color: sub, height: 1.5),
+            style: TextStyle(
+              color: chronosColors(context).textSecondary,
+              height: 1.5,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -329,6 +346,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       _Hint('最近读取 ${_clock(snapshot.readAt)} · 应用前台时长合计'),
       const SizedBox(height: 20),
       _card(
+        context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -337,8 +355,8 @@ class _LiveExperienceState extends State<_LiveExperience>
             Text(
               formatMinutes(today.totalMinutes),
               key: const Key('live-today-total'),
-              style: const TextStyle(
-                color: ink,
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
               ),
@@ -346,10 +364,13 @@ class _LiveExperienceState extends State<_LiveExperience>
             const SizedBox(height: 6),
             const _Hint('已记录应用的前台使用时长'),
             if (top != null) ...[
-              const Divider(color: line, height: 28),
+              Divider(color: chronosColors(context).border, height: 28),
               Text(
                 '最多：${top.label}  ·  ${formatMinutes(top.minutes)}',
-                style: const TextStyle(color: sub, fontSize: 12),
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 12,
+                ),
               ),
             ],
           ],
@@ -358,6 +379,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       const SizedBox(height: 14),
       if (today.hourly != null && today.hourly!.length == 24)
         _card(
+          context,
           _LiveHourlyChart(
             hours: today.hourly!,
             selectedHour: _selectedHour,
@@ -366,14 +388,19 @@ class _LiveExperienceState extends State<_LiveExperience>
         )
       else
         _card(
-          const Column(
+          context,
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _CardTitle('使用时段', Icons.waves_rounded),
               SizedBox(height: 10),
               Text(
                 '当前设备尚未提供可核对的小时分布，下面仍可查看应用去向。',
-                style: TextStyle(color: sub, fontSize: 12, height: 1.5),
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 12,
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -382,6 +409,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       const _Section('时间去了哪里', '按应用时长排序'),
       const SizedBox(height: 12),
       _card(
+        context,
         _LiveAppList(
           apps: today.apps,
           totalMinutes: today.totalMinutes,
@@ -406,7 +434,13 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 8),
         const _Heading('还没有可展示的趋势'),
         const SizedBox(height: 14),
-        _card(const Text('使用记录载入后，这里会显示每日累计。', style: TextStyle(color: sub))),
+        _card(
+          context,
+          Text(
+            '使用记录载入后，这里会显示每日累计。',
+            style: TextStyle(color: chronosColors(context).textSecondary),
+          ),
+        ),
       ]);
     }
     final complete = days.where((day) => day.complete).toList();
@@ -442,6 +476,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       const SizedBox(height: 20),
       if (days.any((day) => day.hourly?.length == 24)) ...[
         _card(
+          context,
           _SevenDayHourly(
             days: days,
             selected: _selectedDay,
@@ -451,6 +486,7 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 15),
       ],
       _card(
+        context,
         _LiveDailyChart(
           days: days,
           selected: _selectedDay.clamp(0, days.length - 1),
@@ -458,10 +494,13 @@ class _LiveExperienceState extends State<_LiveExperience>
         ),
       ),
       const SizedBox(height: 15),
-      _card(_LiveDayDetails(day: selectedDay)),
+      _card(context, _LiveDayDetails(day: selectedDay)),
       if (selectedDay.complete && baselineSamples.length >= 2) ...[
         const SizedBox(height: 15),
-        _card(_SameWeekdayBaseline(day: selectedDay, samples: baselineSamples)),
+        _card(
+          context,
+          _SameWeekdayBaseline(day: selectedDay, samples: baselineSamples),
+        ),
       ],
       if (complete.length >= 2 &&
           maxDay!.totalMinutes - minDay!.totalMinutes >= 30 &&
@@ -470,8 +509,9 @@ class _LiveExperienceState extends State<_LiveExperience>
         const _Section('可核查的发现', '仅基于完整日期'),
         const SizedBox(height: 12),
         _insight(
+          context,
           Icons.insights_rounded,
-          lime,
+          chronosColors(context).accent,
           '${maxDay.date.month}月${maxDay.date.day}日使用最多',
           '${formatMinutes(maxDay.totalMinutes)}，比${minDay.date.month}月${minDay.date.day}日多 ${formatMinutes(maxDay.totalMinutes - minDay.totalMinutes)}。样本 ${complete.length} 天；点上方柱形图核对。',
         ),
@@ -490,13 +530,14 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 22),
         const _Section('周回顾', '仅统计可核对的完整日期'),
         const SizedBox(height: 12),
-        _card(_WeeklyReview(days: complete)),
+        _card(context, _WeeklyReview(days: complete)),
       ],
       if (_snapshot!.monthDays.isNotEmpty) ...[
         const SizedBox(height: 22),
         const _Section('近 30 天', '屏幕使用强度'),
         const SizedBox(height: 12),
         _card(
+          context,
           _MonthHeatmap(
             days: _snapshot!.monthDays,
             selected: _selectedMonthDay,
@@ -529,6 +570,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       ),
       const SizedBox(height: 15),
       _card(
+        context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -538,7 +580,11 @@ class _LiveExperienceState extends State<_LiveExperience>
               _status?.notificationsGranted == true
                   ? '系统通知已允许；每个目标每天最多提醒一次。'
                   : '系统通知未开启。目标已保存，但暂不能发送系统提醒。',
-              style: const TextStyle(color: sub, fontSize: 12, height: 1.5),
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 12,
+                height: 1.5,
+              ),
             ),
             if (_status?.notificationsGranted != true) ...[
               const SizedBox(height: 10),
@@ -557,6 +603,7 @@ class _LiveExperienceState extends State<_LiveExperience>
   ]);
 
   Widget _goalControls(_LiveGoal goal) => _card(
+    context,
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -564,7 +611,10 @@ class _LiveExperienceState extends State<_LiveExperience>
           color: Colors.transparent,
           child: SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('启用目标', style: TextStyle(color: ink)),
+            title: Text(
+              '启用目标',
+              style: TextStyle(color: chronosColors(context).textPrimary),
+            ),
             value: goal.enabled,
             onChanged: (value) async {
               await _bridge.setGoalEnabled(goal.id!, value);
@@ -595,9 +645,9 @@ class _LiveExperienceState extends State<_LiveExperience>
             ),
             TextButton(
               onPressed: () => _confirmDeleteGoal(goal),
-              child: const Text(
+              child: Text(
                 '删除',
-                style: TextStyle(color: Color(0xFFF6B765)),
+                style: TextStyle(color: chronosColors(context).danger),
               ),
             ),
           ],
@@ -634,16 +684,26 @@ class _LiveExperienceState extends State<_LiveExperience>
     goal ??= _goal;
     if (goal == null) {
       return _card(
+        context,
         InkWell(
           onTap: onTap,
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.add_circle_outline, color: lime),
+              Icon(
+                Icons.add_circle_outline,
+                color: chronosColors(context).accent,
+              ),
               SizedBox(width: 10),
               Expanded(
-                child: Text('为想减少使用的应用设一个每日上限', style: TextStyle(color: ink)),
+                child: Text(
+                  '为想减少使用的应用设一个每日上限',
+                  style: TextStyle(color: chronosColors(context).textPrimary),
+                ),
               ),
-              Icon(Icons.chevron_right, color: sub),
+              Icon(
+                Icons.chevron_right,
+                color: chronosColors(context).textSecondary,
+              ),
             ],
           ),
         ),
@@ -662,6 +722,7 @@ class _LiveExperienceState extends State<_LiveExperience>
         })
         .join(' + ');
     return _card(
+      context,
       InkWell(
         onTap: onTap,
         child: Column(
@@ -669,19 +730,25 @@ class _LiveExperienceState extends State<_LiveExperience>
           children: [
             Row(
               children: [
-                const Icon(Icons.track_changes_rounded, color: lime),
+                Icon(
+                  Icons.track_changes_rounded,
+                  color: chronosColors(context).accent,
+                ),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
                     goal.name,
-                    style: const TextStyle(
-                      color: ink,
+                    style: TextStyle(
+                      color: chronosColors(context).textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: sub),
+                Icon(
+                  Icons.chevron_right,
+                  color: chronosColors(context).textSecondary,
+                ),
               ],
             ),
             const SizedBox(height: 7),
@@ -689,15 +756,18 @@ class _LiveExperienceState extends State<_LiveExperience>
               selectedNames,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: sub, fontSize: 11),
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 11,
+              ),
             ),
             const SizedBox(height: 17),
             Text(
               usedMinutes == null
                   ? '等待使用数据'
                   : '${formatMinutes(usedMinutes)} / ${formatMinutes(limit)}',
-              style: const TextStyle(
-                color: ink,
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
                 fontSize: 19,
                 fontWeight: FontWeight.w800,
               ),
@@ -708,8 +778,8 @@ class _LiveExperienceState extends State<_LiveExperience>
                   ? 0
                   : (usedMinutes / limit).clamp(0.0, 1.0),
               minHeight: 8,
-              backgroundColor: line,
-              color: lime,
+              backgroundColor: chronosColors(context).border,
+              color: chronosColors(context).accent,
             ),
             const SizedBox(height: 9),
             Text(
@@ -720,13 +790,19 @@ class _LiveExperienceState extends State<_LiveExperience>
                   : _status?.notificationsGranted != true
                   ? '通知未开启，暂不能提醒'
                   : '提醒已开启 · ${goal.tone}语气',
-              style: const TextStyle(color: sub, fontSize: 11),
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 11,
+              ),
             ),
             if (goal.lastCheckedAt != null) ...[
               const SizedBox(height: 5),
               Text(
                 '后台上次检查 ${_clock(goal.lastCheckedAt)}',
-                style: const TextStyle(color: sub, fontSize: 11),
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 11,
+                ),
               ),
             ],
           ],
@@ -765,7 +841,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.9,
       ),
-      backgroundColor: panel,
+      backgroundColor: chronosColors(context).surface,
       builder: (sheetContext) => _LiveGoalEditor(
         existing: existing,
         apps: _availableApps(),
@@ -784,7 +860,7 @@ class _LiveExperienceState extends State<_LiveExperience>
     final days = _snapshot?.days ?? <_LiveDay>[];
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: panel,
+      backgroundColor: chronosColors(context).surface,
       isScrollControlled: true,
       builder: (_) => _AppDetailSheet(app: app, days: days),
     );
@@ -793,7 +869,7 @@ class _LiveExperienceState extends State<_LiveExperience>
   void _showSettings() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: panel,
+      backgroundColor: chronosColors(context).surface,
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
         child: Padding(
@@ -805,9 +881,12 @@ class _LiveExperienceState extends State<_LiveExperience>
               children: [
                 const _Heading('设置与数据'),
                 const SizedBox(height: 13),
-                const Text(
+                Text(
                   '设备使用数据只在本机展示。目标设置保存在本机，不上传到服务器。',
-                  style: TextStyle(color: sub, height: 1.5),
+                  style: TextStyle(
+                    color: chronosColors(context).textSecondary,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 ListTile(
@@ -821,6 +900,15 @@ class _LiveExperienceState extends State<_LiveExperience>
                     _status?.notificationsGranted == true ? '已开启' : '未开启',
                   ),
                   onTap: () => _bridge.openNotificationSettings(),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.palette_outlined),
+                  title: const Text('外观主题'),
+                  subtitle: Text(ChronosThemeScope.of(context).choice.label),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    showChronosThemePicker(context);
+                  },
                 ),
                 ListTile(
                   title: const Text('查看演示数据'),
@@ -850,17 +938,19 @@ class _LiveExperienceState extends State<_LiveExperience>
                     },
                   ),
                 ListTile(
-                  title: const Text(
+                  title: Text(
                     '删除本地目标与偏好',
-                    style: TextStyle(color: Color(0xFFF6B765)),
+                    style: TextStyle(color: chronosColors(context).danger),
                   ),
                   onTap: () async {
+                    final resetAppearance = ChronosThemeScope.of(context)
+                        .onReset;
                     final confirmed = await showDialog<bool>(
                       context: sheetContext,
                       builder: (dialogContext) => AlertDialog(
                         title: const Text('删除本地数据？'),
                         content: const Text(
-                          '将删除 Chronos 保存的目标与提醒记录。系统使用时间由设备管理，不会被删除。',
+                          '将删除 Chronos 保存的目标、提醒记录与洞察偏好，外观恢复为跟随系统。系统使用时间由设备管理，不会被删除。',
                         ),
                         actions: [
                           TextButton(
@@ -877,6 +967,7 @@ class _LiveExperienceState extends State<_LiveExperience>
                     );
                     if (confirmed == true) {
                       await _bridge.deleteLocalData();
+                      resetAppearance();
                       if (sheetContext.mounted) Navigator.pop(sheetContext);
                       await _refresh();
                     }
@@ -919,8 +1010,8 @@ class _LiveHourlyChart extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           '${hourLabel(peak)}–${hourLabel(peak + 3)} 最集中 · ${formatMinutes(peakMinutes)}',
-          style: const TextStyle(
-            color: ink,
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -946,8 +1037,8 @@ class _LiveHourlyChart extends StatelessWidget {
                         height: math.max(4, hours[hour] / 60 * 72),
                         decoration: BoxDecoration(
                           color: hour == selectedHour
-                              ? lime
-                              : _usageColor(hours[hour]),
+                              ? chronosColors(context).accent
+                              : _usageColor(context, hours[hour]),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -969,10 +1060,10 @@ class _LiveHourlyChart extends StatelessWidget {
             _Hint('24'),
           ],
         ),
-        const Divider(color: line, height: 25),
+        Divider(color: chronosColors(context).border, height: 25),
         Text(
           '${hourLabel(selectedHour)}–${hourLabel(selectedHour + 1)} · ${formatMinutes(hours[selectedHour])}',
-          style: const TextStyle(color: lime, fontSize: 12),
+          style: TextStyle(color: chronosColors(context).accent, fontSize: 12),
         ),
       ],
     );
@@ -991,13 +1082,13 @@ class _LiveAppList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (apps.isEmpty) return const Text('尚无应用明细', style: TextStyle(color: sub));
-    const colors = [
-      Color(0xFFF6B765),
-      Color(0xFF78B7F7),
-      Color(0xFFAA94F3),
-      Color(0xFF8DD5CB),
-    ];
+    if (apps.isEmpty) {
+      return Text(
+        '尚无应用明细',
+        style: TextStyle(color: chronosColors(context).textSecondary),
+      );
+    }
+    final colors = chronosColors(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1005,7 +1096,7 @@ class _LiveAppList extends StatelessWidget {
         const SizedBox(height: 15),
         ...apps.take(10).toList().asMap().entries.map((entry) {
           final app = entry.value;
-          final color = colors[entry.key % colors.length];
+          final color = colors.categoryAt(entry.key);
           return Padding(
             padding: const EdgeInsets.only(bottom: 17),
             child: InkWell(
@@ -1028,13 +1119,16 @@ class _LiveAppList extends StatelessWidget {
                           app.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: ink, fontSize: 12),
+                          style: TextStyle(
+                            color: chronosColors(context).textPrimary,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       Text(
                         formatMinutes(app.minutes),
-                        style: const TextStyle(
-                          color: ink,
+                        style: TextStyle(
+                          color: chronosColors(context).textPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1047,7 +1141,7 @@ class _LiveAppList extends StatelessWidget {
                         ? 0
                         : (app.minutes / totalMinutes).clamp(0.0, 1.0),
                     color: color,
-                    backgroundColor: line,
+                    backgroundColor: chronosColors(context).border,
                     minHeight: 7,
                   ),
                 ],
@@ -1089,13 +1183,13 @@ class _AppDetailSheet extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 '${app.category} · 最近七天',
-                style: const TextStyle(color: sub),
+                style: TextStyle(color: chronosColors(context).textSecondary),
               ),
               const SizedBox(height: 20),
               Text(
                 '已知日期合计 ${formatMinutes(sum)}',
-                style: const TextStyle(
-                  color: ink,
+                style: TextStyle(
+                  color: chronosColors(context).textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1115,7 +1209,10 @@ class _AppDetailSheet extends StatelessWidget {
                         children: [
                           Text(
                             value == null ? '—' : '${value}m',
-                            style: const TextStyle(color: sub, fontSize: 10),
+                            style: TextStyle(
+                              color: chronosColors(context).textSecondary,
+                              fontSize: 10,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Container(
@@ -1124,14 +1221,19 @@ class _AppDetailSheet extends StatelessWidget {
                                 ? 3
                                 : math.max(4, value / maximum * 100),
                             decoration: BoxDecoration(
-                              color: value == null ? line : lime,
+                              color: value == null
+                                  ? chronosColors(context).border
+                                  : chronosColors(context).accent,
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                           const SizedBox(height: 7),
                           Text(
                             _weekday(days[index].date),
-                            style: const TextStyle(color: sub, fontSize: 11),
+                            style: TextStyle(
+                              color: chronosColors(context).textSecondary,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
@@ -1150,12 +1252,18 @@ class _AppDetailSheet extends StatelessWidget {
                       Expanded(
                         child: Text(
                           '${day.date.month}月${day.date.day}日',
-                          style: const TextStyle(color: sub, fontSize: 12),
+                          style: TextStyle(
+                            color: chronosColors(context).textSecondary,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       Text(
                         value == null ? '无数据' : formatMinutes(value),
-                        style: const TextStyle(color: ink, fontSize: 12),
+                        style: TextStyle(
+                          color: chronosColors(context).textPrimary,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -1205,7 +1313,9 @@ class _SevenDayHourly extends StatelessWidget {
                     child: Text(
                       _weekday(day.date),
                       style: TextStyle(
-                        color: selected == index ? lime : sub,
+                        color: selected == index
+                            ? chronosColors(context).accent
+                            : chronosColors(context).textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -1220,8 +1330,8 @@ class _SevenDayHourly extends StatelessWidget {
                             margin: const EdgeInsets.symmetric(horizontal: 1),
                             decoration: BoxDecoration(
                               color: minutes == null
-                                  ? line
-                                  : _usageColor(minutes),
+                                  ? chronosColors(context).border
+                                  : _usageColor(context, minutes),
                               borderRadius: BorderRadius.circular(3),
                             ),
                           ),
@@ -1235,7 +1345,10 @@ class _SevenDayHourly extends StatelessWidget {
                     child: Text(
                       day.available ? formatMinutes(day.totalMinutes) : '无数据',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(color: sub, fontSize: 10),
+                      style: TextStyle(
+                        color: chronosColors(context).textSecondary,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
                 ],
@@ -1284,8 +1397,8 @@ class _LiveDailyChart extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           '${day.date.month}月${day.date.day}日 · ${day.available ? formatMinutes(day.totalMinutes) : '无数据'}${day.available && !day.complete ? '（进行中）' : ''}',
-          style: const TextStyle(
-            color: ink,
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -1310,7 +1423,10 @@ class _LiveDailyChart extends StatelessWidget {
                       children: [
                         Text(
                           '${item.date.day}',
-                          style: const TextStyle(color: sub, fontSize: 10),
+                          style: TextStyle(
+                            color: chronosColors(context).textSecondary,
+                            fontSize: 10,
+                          ),
                         ),
                         const SizedBox(height: 5),
                         Container(
@@ -1323,10 +1439,10 @@ class _LiveDailyChart extends StatelessWidget {
                               : 3,
                           decoration: BoxDecoration(
                             color: !item.available
-                                ? line
+                                ? chronosColors(context).border
                                 : selected == index
-                                ? lime
-                                : const Color(0xFF6F91BB),
+                                ? chronosColors(context).accent
+                                : chronosColors(context).usageLow,
                             borderRadius: BorderRadius.circular(7),
                           ),
                         ),
@@ -1334,7 +1450,9 @@ class _LiveDailyChart extends StatelessWidget {
                         Text(
                           _weekday(item.date),
                           style: TextStyle(
-                            color: selected == index ? lime : sub,
+                            color: selected == index
+                                ? chronosColors(context).accent
+                                : chronosColors(context).textSecondary,
                             fontSize: 11,
                           ),
                         ),
@@ -1369,7 +1487,10 @@ class _LiveDayDetails extends StatelessWidget {
           day.reason == 'unreliable'
               ? '系统统计与屏幕交互时长不一致，已隐藏这一天的数值。'
               : '这一天没有可核对的记录。',
-          style: const TextStyle(color: sub, height: 1.5),
+          style: TextStyle(
+            color: chronosColors(context).textSecondary,
+            height: 1.5,
+          ),
         )
       else
         _LiveAppList(
@@ -1430,18 +1551,27 @@ class _MonthHeatmap extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: item.available
-                        ? Color.lerp(panel2, lime, 0.18 + intensity * 0.82)
-                        : line,
+                        ? Color.lerp(
+                            chronosColors(context).surfaceRaised,
+                            chronosColors(context).accent,
+                            0.18 + intensity * 0.82,
+                          )
+                        : chronosColors(context).border,
                     borderRadius: BorderRadius.circular(8),
                     border: index == selected
-                        ? Border.all(color: ink, width: 2)
+                        ? Border.all(
+                            color: chronosColors(context).textPrimary,
+                            width: 2,
+                          )
                         : null,
                   ),
                   child: Center(
                     child: Text(
                       '${item.date.day}',
                       style: TextStyle(
-                        color: item.available && intensity > 0.55 ? bg : ink,
+                        color: item.available && intensity > 0.55
+                            ? chronosColors(context).background
+                            : chronosColors(context).textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1455,7 +1585,10 @@ class _MonthHeatmap extends StatelessWidget {
         const SizedBox(height: 13),
         Text(
           '${day.date.month}月${day.date.day}日 · ${day.available ? formatMinutes(day.totalMinutes) : '无数据'}${day.available && !day.complete ? '（进行中）' : ''}',
-          style: const TextStyle(color: ink, fontSize: 12),
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
+            fontSize: 12,
+          ),
         ),
       ],
     );
@@ -1483,12 +1616,19 @@ class _SameWeekdayBaseline extends StatelessWidget {
           difference == 0
               ? '与过去同星期的平均时长相同'
               : '比过去同星期平均${difference > 0 ? '多' : '少'} ${formatMinutes(difference.abs())}',
-          style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           '过去 ${samples.length} 个完整${_weekday(day.date)}的平均：${formatMinutes(average)}。仅比较完整日期。',
-          style: const TextStyle(color: sub, fontSize: 12, height: 1.5),
+          style: TextStyle(
+            color: chronosColors(context).textSecondary,
+            fontSize: 12,
+            height: 1.5,
+          ),
         ),
       ],
     );
@@ -1522,8 +1662,8 @@ class _WeeklyReview extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           formatMinutes(total),
-          style: const TextStyle(
-            color: ink,
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
             fontSize: 24,
             fontWeight: FontWeight.w800,
           ),
@@ -1531,18 +1671,27 @@ class _WeeklyReview extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           '${days.length} 个完整日 · 日均 ${formatMinutes(average)}',
-          style: const TextStyle(color: sub, fontSize: 12),
+          style: TextStyle(
+            color: chronosColors(context).textSecondary,
+            fontSize: 12,
+          ),
         ),
         if (weekdayAverage != null && weekendAverage != null) ...[
-          const Divider(color: line, height: 25),
+          Divider(color: chronosColors(context).border, height: 25),
           Text(
             '工作日均值 ${formatMinutes(weekdayAverage)} · 周末均值 ${formatMinutes(weekendAverage)}',
-            style: const TextStyle(color: ink, fontSize: 12),
+            style: TextStyle(
+              color: chronosColors(context).textPrimary,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
             '工作日 ${weekdays.length} 天，周末 ${weekends.length} 天；今天不计入。',
-            style: const TextStyle(color: sub, fontSize: 11),
+            style: TextStyle(
+              color: chronosColors(context).textSecondary,
+              fontSize: 11,
+            ),
           ),
         ],
       ],
@@ -1617,13 +1766,19 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '选择合计计时的应用',
-              style: TextStyle(color: ink, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 6),
             if (widget.apps.isEmpty)
-              const Text('最近七天还没有可选择的应用记录。', style: TextStyle(color: sub)),
+              Text(
+                '最近七天还没有可选择的应用记录。',
+                style: TextStyle(color: chronosColors(context).textSecondary),
+              ),
             SizedBox(
               height: math.min(230, widget.apps.length * 51.0),
               child: ListView.builder(
@@ -1654,7 +1809,10 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
             const SizedBox(height: 12),
             Text(
               '${_weekendLimit == null ? '每日' : '工作日'}合计上限 · ${formatMinutes(_limit)}',
-              style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             Slider(
               value: _limit.toDouble(),
@@ -1675,7 +1833,10 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
             if (_weekendLimit != null) ...[
               Text(
                 '周末合计上限 · ${formatMinutes(_weekendLimit!)}',
-                style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: chronosColors(context).textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Slider(
                 value: _weekendLimit!.toDouble(),
@@ -1698,9 +1859,12 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
               onChanged: (value) => setState(() => _enabled = value),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               '提醒语气',
-              style: TextStyle(color: ink, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -1722,14 +1886,17 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
                 _name.text,
                 DateTime.now().weekday >= 6 ? _weekendLimit ?? _limit : _limit,
               ),
-              style: const TextStyle(color: sub, height: 1.45),
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                height: 1.45,
+              ),
             ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: Color(0xFFF6B765)),
+                  style: TextStyle(color: chronosColors(context).danger),
                 ),
               ),
             const SizedBox(height: 19),

@@ -5,35 +5,21 @@ class UsageCategory {
     this.label,
     this.minutes,
     this.baselineMinutes,
-    this.color,
     this.icon,
   );
 
   final String label;
   final int minutes;
   final int baselineMinutes;
-  final Color color;
   final IconData icon;
 }
 
 class DemoData {
   static const categories = <UsageCategory>[
-    UsageCategory(
-      '社交与短视频',
-      158,
-      140,
-      Color(0xFFF6B765),
-      Icons.play_circle_outline,
-    ),
-    UsageCategory(
-      '工作与学习',
-      106,
-      124,
-      Color(0xFF78B7F7),
-      Icons.auto_stories_outlined,
-    ),
-    UsageCategory('影音娱乐', 54, 62, Color(0xFFAA94F3), Icons.headphones_outlined),
-    UsageCategory('其他', 24, 30, Color(0xFF8DD5CB), Icons.apps_rounded),
+    UsageCategory('社交与短视频', 158, 140, Icons.play_circle_outline),
+    UsageCategory('工作与学习', 106, 124, Icons.auto_stories_outlined),
+    UsageCategory('影音娱乐', 54, 62, Icons.headphones_outlined),
+    UsageCategory('其他', 24, 30, Icons.apps_rounded),
   ];
 
   // The seven demo dates run from Friday, October 23 through Thursday,

@@ -67,6 +67,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       const _Hint('与上周同日相比 · 以下为演示数据'),
       const SizedBox(height: 20),
       _card(
+        context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -76,7 +77,9 @@ class _ChronosHomeState extends State<ChronosHome> {
                 const Spacer(),
                 TextButton(
                   onPressed: () => setState(() => tab = 1),
-                  style: TextButton.styleFrom(foregroundColor: sub),
+                  style: TextButton.styleFrom(
+                    foregroundColor: chronosColors(context).textSecondary,
+                  ),
                   child: const Text('看趋势  →', style: TextStyle(fontSize: 12)),
                 ),
               ],
@@ -94,8 +97,8 @@ class _ChronosHomeState extends State<ChronosHome> {
                         child: Text(
                           formatMinutes(DemoData.todayMinutes),
                           key: const Key('today-duration'),
-                          style: const TextStyle(
-                            color: ink,
+                          style: TextStyle(
+                            color: chronosColors(context).textPrimary,
                             fontSize: 29,
                             fontWeight: FontWeight.w800,
                           ),
@@ -113,19 +116,19 @@ class _ChronosHomeState extends State<ChronosHome> {
                   label: '今日使用类别占比，社交与短视频最多',
                   child: CustomPaint(
                     size: const Size(94, 94),
-                    painter: _RingPainter(),
+                    painter: _RingPainter(chronosColors(context)),
                   ),
                 ),
               ],
             ),
-            const Divider(color: line, height: 32),
+            Divider(color: chronosColors(context).border, height: 32),
             Row(
               children: [
                 Container(
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: topCategory.color,
+                    color: chronosColors(context).social,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -133,13 +136,16 @@ class _ChronosHomeState extends State<ChronosHome> {
                 Expanded(
                   child: Text(
                     '最多：${topCategory.label}',
-                    style: const TextStyle(color: sub, fontSize: 12),
+                    style: TextStyle(
+                      color: chronosColors(context).textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 Text(
                   formatMinutes(topCategory.minutes),
-                  style: const TextStyle(
-                    color: ink,
+                  style: TextStyle(
+                    color: chronosColors(context).textPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -149,14 +155,19 @@ class _ChronosHomeState extends State<ChronosHome> {
           ],
         ),
         padding: const EdgeInsets.all(19),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF202D3B), panel, panel],
+          colors: [
+            chronosColors(context).surfaceRaised,
+            chronosColors(context).surface,
+            chronosColors(context).surface,
+          ],
         ),
       ),
       const SizedBox(height: 14),
       _card(
+        context,
         _HourlyChart(
           selectedHour: selectedHour,
           onSelect: (hour) => setState(() => selectedHour = hour),
@@ -165,7 +176,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       const SizedBox(height: 24),
       const _Section('时间去了哪里', '对比前三周同日平均'),
       const SizedBox(height: 12),
-      _card(const _CategoryBreakdown()),
+      _card(context, const _CategoryBreakdown()),
       const SizedBox(height: 23),
       const _Section('你的目标', '按你设定的标准提醒'),
       const SizedBox(height: 12),
@@ -188,6 +199,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       _Hint('相差 ${formatMinutes(maxMinutes - minMinutes)} · 点按某天查看'),
       const SizedBox(height: 20),
       _card(
+        context,
         _WeekRhythm(
           selectedDay: selectedDay,
           onSelect: (day) => setState(() => selectedDay = day),
@@ -195,6 +207,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       ),
       const SizedBox(height: 15),
       _card(
+        context,
         _WeeklyBars(
           selectedDay: selectedDay,
           onSelect: (day) => setState(() => selectedDay = day),
@@ -204,8 +217,9 @@ class _ChronosHomeState extends State<ChronosHome> {
       const _Section('最近七天的发现', '基于演示数据'),
       const SizedBox(height: 12),
       _insight(
+        context,
         Icons.calendar_view_week_rounded,
-        lime,
+        chronosColors(context).accent,
         '周${DemoData.weekdays[maxDay]}使用最多',
         '使用 ${formatMinutes(maxMinutes)}，比周${DemoData.weekdays[minDay]}多 ${formatMinutes(maxMinutes - minMinutes)}。点按上方日期，查看每一天的高峰时段。',
       ),
@@ -222,6 +236,7 @@ class _ChronosHomeState extends State<ChronosHome> {
     _goalCard(null),
     const SizedBox(height: 17),
     _card(
+      context,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -231,8 +246,8 @@ class _ChronosHomeState extends State<ChronosHome> {
             child: Text(
               formatMinutes(goalMinutes),
               key: const Key('goal-limit'),
-              style: const TextStyle(
-                color: lime,
+              style: TextStyle(
+                color: chronosColors(context).accent,
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
               ),
@@ -255,22 +270,23 @@ class _ChronosHomeState extends State<ChronosHome> {
     ),
     const SizedBox(height: 12),
     _card(
+      context,
       Row(
         children: [
-          const Icon(
+          Icon(
             Icons.notifications_active_outlined,
-            color: lime,
+            color: chronosColors(context).accent,
             size: 20,
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '超时提醒',
                   style: TextStyle(
-                    color: ink,
+                    color: chronosColors(context).textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -283,8 +299,8 @@ class _ChronosHomeState extends State<ChronosHome> {
           Switch(
             value: reminders,
             onChanged: (value) => setState(() => reminders = value),
-            activeThumbColor: bg,
-            activeTrackColor: lime,
+            activeThumbColor: chronosColors(context).background,
+            activeTrackColor: chronosColors(context).accent,
           ),
         ],
       ),
@@ -293,6 +309,7 @@ class _ChronosHomeState extends State<ChronosHome> {
     const _Section('提醒语气', '用你喜欢的方式提醒'),
     const SizedBox(height: 12),
     _card(
+      context,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -305,11 +322,17 @@ class _ChronosHomeState extends State<ChronosHome> {
                 label: Text(option),
                 selected: active,
                 onSelected: (_) => setState(() => tone = option),
-                selectedColor: lime,
-                backgroundColor: panel2,
-                side: BorderSide(color: active ? lime : line),
+                selectedColor: chronosColors(context).accent,
+                backgroundColor: chronosColors(context).surfaceRaised,
+                side: BorderSide(
+                  color: active
+                      ? chronosColors(context).accent
+                      : chronosColors(context).border,
+                ),
                 labelStyle: TextStyle(
-                  color: active ? bg : sub,
+                  color: active
+                      ? chronosColors(context).background
+                      : chronosColors(context).textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               );
@@ -320,14 +343,20 @@ class _ChronosHomeState extends State<ChronosHome> {
             width: double.infinity,
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
-              color: panel2,
+              color: chronosColors(context).surfaceRaised,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(switch (tone) {
-              '温和' => '今天已经达到你设定的时长啦。要不要休息一下？',
-              '严格' => '你已超过自己设定的上限。现在放下手机，回到计划。',
-              _ => '抖音和小红书已达到今天的使用上限。',
-            }, style: const TextStyle(color: ink, fontSize: 12)),
+            child: Text(
+              switch (tone) {
+                '温和' => '今天已经达到你设定的时长啦。要不要休息一下？',
+                '严格' => '你已超过自己设定的上限。现在放下手机，回到计划。',
+                _ => '抖音和小红书已达到今天的使用上限。',
+              },
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
+                fontSize: 12,
+              ),
+            ),
           ),
         ],
       ),
@@ -339,6 +368,7 @@ class _ChronosHomeState extends State<ChronosHome> {
   Widget _goalCard(VoidCallback? onTap) {
     const used = 98;
     return _card(
+      context,
       InkWell(
         onTap: onTap,
         child: Column(
@@ -346,22 +376,25 @@ class _ChronosHomeState extends State<ChronosHome> {
           children: [
             Row(
               children: [
-                const Icon(Icons.track_changes_rounded, color: lime),
+                Icon(
+                  Icons.track_changes_rounded,
+                  color: chronosColors(context).accent,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     '少一点无意识刷屏',
                     style: TextStyle(
-                      color: ink,
+                      color: chronosColors(context).textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
                 if (onTap != null)
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios_rounded,
-                    color: sub,
+                    color: chronosColors(context).textSecondary,
                     size: 14,
                   ),
               ],
@@ -375,10 +408,10 @@ class _ChronosHomeState extends State<ChronosHome> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
+                Text(
                   '1 小时 38 分钟',
                   style: TextStyle(
-                    color: ink,
+                    color: chronosColors(context).textPrimary,
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
                   ),
@@ -386,7 +419,10 @@ class _ChronosHomeState extends State<ChronosHome> {
                 const Spacer(),
                 Text(
                   '/ ${formatMinutes(goalMinutes)}',
-                  style: const TextStyle(color: sub, fontSize: 11),
+                  style: TextStyle(
+                    color: chronosColors(context).textSecondary,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -396,9 +432,11 @@ class _ChronosHomeState extends State<ChronosHome> {
               child: LinearProgressIndicator(
                 value: (used / goalMinutes).clamp(0.0, 1.0),
                 minHeight: 8,
-                backgroundColor: line,
+                backgroundColor: chronosColors(context).border,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  used >= goalMinutes ? const Color(0xFFF6B765) : lime,
+                  used >= goalMinutes
+                      ? chronosColors(context).danger
+                      : chronosColors(context).accent,
                 ),
               ),
             ),
@@ -409,12 +447,15 @@ class _ChronosHomeState extends State<ChronosHome> {
                   : used >= goalMinutes
                   ? '已达到今天的提醒阈值'
                   : '距离提醒还有 ${formatMinutes(goalMinutes - used)}',
-              style: const TextStyle(color: sub, fontSize: 11),
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
       ),
-      color: const Color(0xFF1A2430),
+      color: chronosColors(context).surfaceRaised,
     );
   }
 }

@@ -10,6 +10,7 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 | Goals | Multiple local combined app limits, 15-minute steps, optional weekend limits, three reviewed tones, independent enable/disable, pause until tomorrow, edit and local deletion. Existing single-goal data is migrated. | Not connected to FamilyActivityPicker or Device Activity monitoring. |
 | Reminders | Periodic JobScheduler check, at most one notification per goal per local date, only after notification permission. APK compiles; actual threshold delivery and reboot persistence remain unverified. | Not implemented. |
 | Insight controls | In-app week-range fact, 30-day suppression, global switch; never changes a user goal. | Demo only. |
+| Appearance | Three shared Flutter palettes plus follow-system mode, local preference persistence, themed charts and semantic warning colors. | Shared demo UI uses the same appearance picker; native report UI is not built yet. |
 | AI | No AI calls by design. The spec requires a separate privacy and feasibility decision before P3. | Same. |
 
 ## Android validation
@@ -17,7 +18,8 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 - A debug APK built and installed on an Android 13 physical device. The user granted usage access through system settings; Chronos then displayed real app labels, today's total and trend pages.
 - The device returned some historical app durations close to 24 hours. The reader now checks app foreground totals against Android screen-interactive event totals; inconsistent dates display as unavailable and do not affect insights. This is a conservative quality gate, not a substitute for comparing figures with the device's system Screen Time report.
 - Goal editor appearance and app selection list were inspected on the physical device. Two disabled temporary goals were saved and shown separately, then deleted. Notification permission was not requested; background threshold delivery, timezone changes, and reboot persistence remain unverified.
-- `dart format .`, `flutter analyze`, `flutter test` (9 tests), `flutter build apk --debug`, and `flutter build web` passed for this change. See the latest `dev` CI result for the pushed commit.
+- The appearance picker, all three palettes, and follow-system restoration were inspected on the Android 13 physical device.
+- `dart format .`, `flutter analyze`, `flutter test` (12 tests), `flutter build apk --debug`, and `flutter build web` passed for this change. See the latest `dev` CI result for the pushed commit.
 
 ## Outstanding work before a cross-platform release
 

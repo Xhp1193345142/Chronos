@@ -6,6 +6,7 @@
 - Swift for Family Controls, Device Activity monitoring, and the iOS Device Activity Report extension. Apple's report extension renders its own SwiftUI content in a protected sandbox.
 - Kotlin for Android UsageStatsManager integration and background goal checks.
 - Local storage for goals, preferences, and permissible summaries. No backend in the first release.
+- Flutter `ThemeExtension` tokens and a locally stored appearance choice for all shared UI; system mode maps light and dark appearances without changing usage data or goals.
 
 ## Boundaries
 

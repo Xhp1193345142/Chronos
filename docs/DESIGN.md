@@ -4,18 +4,17 @@
 
 Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a specific, checkable observation, then show the chart that supports it. The visual hierarchy is: change from a reference, current total, when usage happened, category comparison, then a user-set goal. Use generous spacing and a small number of strong colors.
 
-## Tokens for the first demo
+## Switchable themes
 
-| Role | Color |
-| --- | --- |
-| Background | `#0B1020` |
-| Surface | `#151C2E` |
-| Primary text | `#F6F7FB` |
-| Secondary text | `#9BA8BF` |
-| Accent / focus | `#A7F070` |
-| Social | `#F6B765` |
-| Work | `#78B7F7` |
-| Other | `#AA94F3` |
+| Theme | Background | Surface | Text | Focus |
+| --- | --- | --- | --- | --- |
+| 暮光星图 | `#0E1024` | `#1B2040` | `#F5F4FF` | `#AA9BFF` |
+| 晨雾纸感 | `#F6F4EE` | `#FFFFFF` | `#1D292B` | `#127B72` |
+| 日落脉冲 | `#17131E` | `#292230` | `#FFF8F3` | `#FF967E` |
+
+The appearance picker also offers **跟随系统**: light maps to 晨雾纸感 and dark maps to 暮光星图. The selection is stored locally and applies to the device-data UI and demo UI. The Flutter `ChronosPalette` theme extension owns surface, text, focus, category, usage-intensity and semantic colors; usage data objects never own display colors.
+
+Use `positive` for a factual favorable comparison, `caution` for elevated-but-ordinary usage, and `danger` only for an exceeded goal or destructive action. Color never replaces a numeric label, icon or explicit state text. Each theme has its own ordered usage-intensity scale and stable category-color order.
 
 Use rounded cards, subtle separators, and a consistent 8-point spacing scale. Large numbers should use tabular figures where available. Motion should explain a transition or selection; never animate charts simply to decorate them.
 
