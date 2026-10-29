@@ -193,14 +193,52 @@ class _ChronosHomeState extends State<ChronosHome> {
     final maxDay = DemoData.week.indexOf(maxMinutes);
     final minDay = DemoData.week.indexOf(minMinutes);
     return _page([
-      const _Eyebrow('最近七天的屏幕节奏'),
-      const SizedBox(height: 6),
-      _Heading(
-        '周${DemoData.weekdays[maxDay]}最多，周${DemoData.weekdays[minDay]}最少',
+      const _Eyebrow('最近七天 · 演示数据'),
+      const SizedBox(height: 7),
+      const _Heading('趋势'),
+      const SizedBox(height: 4),
+      const _Hint('选择一天，查看它的使用节奏'),
+      const SizedBox(height: 23),
+      _card(
+        context,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '本周日均',
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Text(
+              formatMinutes(DemoData.weekAverageMinutes),
+              style: TextStyle(
+                color: chronosColors(context).textPrimary,
+                fontSize: 35,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -1.2,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            Divider(color: chronosColors(context).border, height: 34),
+            Text(
+              '周${DemoData.weekdays[maxDay]}最多，周${DemoData.weekdays[minDay]}最少 · 相差 ${formatMinutes(maxMinutes - minMinutes)}',
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
       ),
-      const SizedBox(height: 6),
-      _Hint('相差 ${formatMinutes(maxMinutes - minMinutes)} · 点按某天查看'),
-      const SizedBox(height: 20),
+      const SizedBox(height: 27),
+      const _Section('七天节奏', '一行代表一天'),
+      const SizedBox(height: 12),
       _card(
         context,
         _WeekRhythm(
@@ -208,7 +246,9 @@ class _ChronosHomeState extends State<ChronosHome> {
           onSelect: (day) => setState(() => selectedDay = day),
         ),
       ),
-      const SizedBox(height: 15),
+      const SizedBox(height: 27),
+      const _Section('每日累计', '点按查看当天'),
+      const SizedBox(height: 12),
       _card(
         context,
         _WeeklyBars(
@@ -230,29 +270,34 @@ class _ChronosHomeState extends State<ChronosHome> {
   }
 
   Widget _goals() => _page([
-    const _Eyebrow('目标与提醒'),
-    const SizedBox(height: 6),
-    const _Heading('由你定义，更好的节奏。'),
-    const SizedBox(height: 6),
-    const _Hint('数字是参考，决定权始终在你。'),
-    const SizedBox(height: 22),
+    const _Eyebrow('目标与提醒 · 演示数据'),
+    const SizedBox(height: 7),
+    const _Heading('目标'),
+    const SizedBox(height: 4),
+    const _Hint('由你定义，更好的节奏。'),
+    const SizedBox(height: 27),
+    const _Section('使用目标', '决定权始终在你'),
+    const SizedBox(height: 12),
     _goalCard(null),
-    const SizedBox(height: 17),
+    const SizedBox(height: 27),
+    const _Section('每日上限', '选择你愿意接受的时长'),
+    const SizedBox(height: 12),
     _card(
       context,
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _CardTitle('每天的时长上限', Icons.timer_outlined),
-          const SizedBox(height: 18),
+          const _Hint('抖音 + 小红书'),
+          const SizedBox(height: 15),
           Center(
             child: Text(
               formatMinutes(goalMinutes),
               key: const Key('goal-limit'),
               style: TextStyle(
                 color: chronosColors(context).accent,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
+                fontSize: 33,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),

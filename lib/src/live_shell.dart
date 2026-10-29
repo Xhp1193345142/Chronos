@@ -512,16 +512,55 @@ class _LiveExperienceState extends State<_LiveExperience>
         .take(3)
         .toList();
     return _page([
-      const _Eyebrow('最近七天的屏幕节奏'),
-      const SizedBox(height: 6),
-      _Heading(
-        maxDay != null && minDay != null && complete.length >= 2
-            ? '最多和最少相差 ${formatMinutes(maxDay.totalMinutes - minDay.totalMinutes)}'
-            : '开始积累你的使用记录',
-      ),
-      const SizedBox(height: 6),
+      const _Eyebrow('最近七天 · 设备数据'),
+      const SizedBox(height: 7),
+      const _Heading('趋势'),
+      const SizedBox(height: 4),
       const _Hint('今天仍在进行中；无数据日期不参与排名'),
-      const SizedBox(height: 20),
+      if (maxDay != null && minDay != null && complete.length >= 2) ...[
+        const SizedBox(height: 23),
+        _card(
+          context,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '完整日期的最大差异',
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 15),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  formatMinutes(maxDay.totalMinutes - minDay.totalMinutes),
+                  style: TextStyle(
+                    color: chronosColors(context).textPrimary,
+                    fontSize: 35,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1.2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              Divider(color: chronosColors(context).border, height: 34),
+              Text(
+                '${maxDay.date.month}月${maxDay.date.day}日最多 · ${minDay.date.month}月${minDay.date.day}日最少 · 样本 ${complete.length} 天',
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+        ),
+      ],
+      const SizedBox(height: 27),
       if (days.any((day) => day.hourly?.length == 24)) ...[
         _card(
           context,
@@ -597,12 +636,14 @@ class _LiveExperienceState extends State<_LiveExperience>
   }
 
   Widget _goalsPage() => _page([
-    const _Eyebrow('目标与提醒'),
-    const SizedBox(height: 6),
-    const _Heading('由你定义，更好的节奏。'),
-    const SizedBox(height: 6),
-    const _Hint('达到上限后提醒一次，送达时间可能受系统影响。'),
-    const SizedBox(height: 22),
+    const _Eyebrow('目标与提醒 · 设备数据'),
+    const SizedBox(height: 7),
+    const _Heading('目标'),
+    const SizedBox(height: 4),
+    const _Hint('由你定义，更好的节奏。'),
+    const SizedBox(height: 27),
+    _Section('使用目标', _goals.isEmpty ? '由你决定提醒时机' : '共 ${_goals.length} 个目标'),
+    const SizedBox(height: 12),
     if (_goals.isEmpty) _goalSummary(onTap: () => _showGoalEditor(null)),
     for (final goal in _goals) ...[
       _goalSummary(goal: goal, onTap: () => _showGoalEditor(goal)),

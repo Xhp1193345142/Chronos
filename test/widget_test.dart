@@ -45,7 +45,7 @@ void main() {
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('周一最多，周二最少'), findsOneWidget);
+    expect(find.textContaining('周一最多，周二最少'), findsOneWidget);
     await tester.tap(find.byKey(const Key('week-day-0')));
     await tester.pumpAndSettle();
     final peak = tester.widget<Text>(

@@ -104,7 +104,8 @@ void main() {
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
     expect(find.textContaining('无数据'), findsWidgets);
-    expect(find.text('最多和最少相差 10 分钟'), findsOneWidget);
+    expect(find.text('完整日期的最大差异'), findsOneWidget);
+    expect(find.text('10 分钟'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

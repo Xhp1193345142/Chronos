@@ -1,51 +1,21 @@
-"""Generate the simple Chronos app mark at every platform icon size.
+"""Resize the selected Chronos app icon for every platform.
 
 Requires Pillow: python3 -m pip install Pillow
 Run from any directory: python3 tools/generate_icons.py
 """
 
 import json
-import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE_SIZE = 1024
-BACKGROUND = "#0B1020"
-ACCENT = "#A7F070"
+SOURCE = ROOT / "assets/branding/chronos-icon-source.png"
 
 
 def base_icon() -> Image.Image:
-    image = Image.new("RGB", (BASE_SIZE, BASE_SIZE), BACKGROUND)
-    draw = ImageDraw.Draw(image)
-    center = BASE_SIZE / 2
-    radius = 314
-    stroke = 102
-    bounds = (
-        center - radius,
-        center - radius,
-        center + radius,
-        center + radius,
-    )
-
-    # An open clock ring forms a subtle C for Chronos.
-    draw.arc(bounds, start=36, end=324, fill=ACCENT, width=stroke)
-    for angle in (36, 324):
-        radians = math.radians(angle)
-        x = center + radius * math.cos(radians)
-        y = center + radius * math.sin(radians)
-        draw.ellipse(
-            (x - stroke / 2, y - stroke / 2, x + stroke / 2, y + stroke / 2),
-            fill=ACCENT,
-        )
-
-    draw.line((center, center, center + 116, center - 156),
-              fill=ACCENT, width=77)
-    draw.ellipse((center - 45, center - 45, center + 45, center + 45),
-                 fill=ACCENT)
-    return image
+    return Image.open(SOURCE).convert("RGB")
 
 
 def save(icon: Image.Image, path: Path, size: int) -> None:

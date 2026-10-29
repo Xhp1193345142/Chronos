@@ -342,10 +342,8 @@ class _WeekRhythm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _CardTitle('七天使用轨迹', Icons.view_week_rounded),
-        const SizedBox(height: 6),
-        const _Hint('一行代表一天 · 颜色越亮，使用越久'),
-        const SizedBox(height: 20),
+        const _Hint('颜色越亮，使用越久'),
+        const SizedBox(height: 17),
         ...List.generate(7, (day) {
           final selected = day == selectedDay;
           final hours = DemoData.hourlyForDay(day);
@@ -479,20 +477,6 @@ class _WeeklyBars extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const _CardTitle('每日累计', Icons.bar_chart_rounded),
-            const Spacer(),
-            Text(
-              '周均 ${formatMinutes(DemoData.weekAverageMinutes)}',
-              style: TextStyle(
-                color: chronosColors(context).textSecondary,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 15),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
