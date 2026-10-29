@@ -60,12 +60,12 @@ class _ChronosHomeState extends State<ChronosHome> {
     final change = DemoData.lastWeekSameDayMinutes - DemoData.todayMinutes;
     final topCategory = DemoData.categories.first;
     return _page([
-      const _Eyebrow('星期四  /  10月29日'),
-      const SizedBox(height: 6),
-      _Heading('今天少用 ${formatMinutes(change)}'),
-      const SizedBox(height: 5),
-      const _Hint('与上周同日相比 · 以下为演示数据'),
-      const SizedBox(height: 20),
+      const _Eyebrow('星期四 · 10月29日'),
+      const SizedBox(height: 7),
+      const _Heading('今天'),
+      const SizedBox(height: 4),
+      const _Hint('看清时间的去向 · 以下为演示数据'),
+      const SizedBox(height: 23),
       _card(
         context,
         Column(
@@ -73,19 +73,28 @@ class _ChronosHomeState extends State<ChronosHome> {
           children: [
             Row(
               children: [
-                const _CardTitle('今日屏幕使用', Icons.phone_iphone_rounded),
+                Text(
+                  '屏幕使用时间',
+                  style: TextStyle(
+                    color: chronosColors(context).textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => setState(() => tab = 1),
                   style: TextButton.styleFrom(
                     foregroundColor: chronosColors(context).textSecondary,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text('看趋势  →', style: TextStyle(fontSize: 12)),
+                  child: const Text('查看趋势  ›', style: TextStyle(fontSize: 12)),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Column(
@@ -99,29 +108,29 @@ class _ChronosHomeState extends State<ChronosHome> {
                           key: const Key('today-duration'),
                           style: TextStyle(
                             color: chronosColors(context).textPrimary,
-                            fontSize: 29,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 37,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -1.4,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 7),
-                      const _Hint('今天的累计使用时长'),
-                      const SizedBox(height: 15),
-                      _Badge('↓ 比上周少 ${formatMinutes(change)}'),
+                      const SizedBox(height: 10),
+                      _Badge('今天少用 ${formatMinutes(change)}'),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Semantics(
-                  label: '今日使用类别占比，社交与短视频最多',
+                  label: '今日使用类别占比，${topCategory.label}最多',
                   child: CustomPaint(
-                    size: const Size(94, 94),
+                    size: const Size(88, 88),
                     painter: _RingPainter(chronosColors(context)),
                   ),
                 ),
               ],
             ),
-            Divider(color: chronosColors(context).border, height: 32),
+            Divider(color: chronosColors(context).border, height: 34),
             Row(
               children: [
                 Container(
@@ -135,10 +144,10 @@ class _ChronosHomeState extends State<ChronosHome> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '最多：${topCategory.label}',
+                    '使用最多 · ${topCategory.label}',
                     style: TextStyle(
                       color: chronosColors(context).textSecondary,
-                      fontSize: 12,
+                      fontSize: 12.5,
                     ),
                   ),
                 ),
@@ -146,34 +155,28 @@ class _ChronosHomeState extends State<ChronosHome> {
                   formatMinutes(topCategory.minutes),
                   style: TextStyle(
                     color: chronosColors(context).textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        padding: const EdgeInsets.all(19),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            chronosColors(context).surfaceRaised,
-            chronosColors(context).surface,
-            chronosColors(context).surface,
-          ],
-        ),
+        padding: const EdgeInsets.fromLTRB(22, 17, 22, 20),
       ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 27),
+      const _Section('一天的节奏', '点按查看每小时'),
+      const SizedBox(height: 12),
       _card(
         context,
         _HourlyChart(
           selectedHour: selectedHour,
           onSelect: (hour) => setState(() => selectedHour = hour),
         ),
+        padding: const EdgeInsets.all(20),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 27),
       const _Section('时间去了哪里', '对比前三周同日平均'),
       const SizedBox(height: 12),
       _card(context, const _CategoryBreakdown()),

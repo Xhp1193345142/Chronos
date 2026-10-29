@@ -255,22 +255,31 @@ class _LiveExperienceState extends State<_LiveExperience>
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 15, 15, 10),
+                padding: const EdgeInsets.fromLTRB(23, 17, 15, 11),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.access_time_filled_rounded,
-                      color: chronosColors(context).accent,
-                      size: 27,
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: chronosColors(context).accent
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Icon(
+                        Icons.access_time_rounded,
+                        color: chronosColors(context).accent,
+                        size: 20,
+                      ),
                     ),
-                    const SizedBox(width: 9),
+                    const SizedBox(width: 10),
                     Text(
-                      'CHRONOS',
+                      'Chronos',
                       style: TextStyle(
                         color: chronosColors(context).textPrimary,
-                        fontSize: 15,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        letterSpacing: -0.2,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Spacer(),
@@ -338,45 +347,77 @@ class _LiveExperienceState extends State<_LiveExperience>
     final top = today.apps.isEmpty ? null : today.apps.first;
     return _page([
       _Eyebrow(
-        '星期${_weekday(today.date)}  /  ${today.date.month}月${today.date.day}日',
+        '星期${_weekday(today.date)} · ${today.date.month}月${today.date.day}日',
       ),
-      const SizedBox(height: 6),
-      const _Heading('今天的屏幕时间'),
-      const SizedBox(height: 5),
+      const SizedBox(height: 7),
+      const _Heading('今天'),
+      const SizedBox(height: 4),
       _Hint('最近读取 ${_clock(snapshot.readAt)} · 应用前台时长合计'),
-      const SizedBox(height: 20),
+      const SizedBox(height: 23),
       _card(
         context,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _CardTitle('今日累计', Icons.phone_iphone_rounded),
-            const SizedBox(height: 16),
             Text(
-              formatMinutes(today.totalMinutes),
-              key: const Key('live-today-total'),
+              '屏幕使用时间',
               style: TextStyle(
-                color: chronosColors(context).textPrimary,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
+                color: chronosColors(context).textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 17),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formatMinutes(today.totalMinutes),
+                key: const Key('live-today-total'),
+                style: TextStyle(
+                  color: chronosColors(context).textPrimary,
+                  fontSize: 37,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -1.4,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             const _Hint('已记录应用的前台使用时长'),
             if (top != null) ...[
-              Divider(color: chronosColors(context).border, height: 28),
-              Text(
-                '最多：${top.label}  ·  ${formatMinutes(top.minutes)}',
-                style: TextStyle(
-                  color: chronosColors(context).textSecondary,
-                  fontSize: 12,
-                ),
+              Divider(color: chronosColors(context).border, height: 34),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '使用最多 · ${top.label}',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: chronosColors(context).textSecondary,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    formatMinutes(top.minutes),
+                    style: TextStyle(
+                      color: chronosColors(context).textPrimary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
         ),
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
       ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 27),
+      const _Section('一天的节奏', '点按查看每小时'),
+      const SizedBox(height: 12),
       if (today.hourly != null && today.hourly!.length == 24)
         _card(
           context,
@@ -385,27 +426,34 @@ class _LiveExperienceState extends State<_LiveExperience>
             selectedHour: _selectedHour,
             onSelect: (value) => setState(() => _selectedHour = value),
           ),
+          padding: const EdgeInsets.all(20),
         )
       else
         _card(
           context,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              _CardTitle('使用时段', Icons.waves_rounded),
-              SizedBox(height: 10),
-              Text(
-                '当前设备尚未提供可核对的小时分布，下面仍可查看应用去向。',
-                style: TextStyle(
-                  color: chronosColors(context).textSecondary,
-                  fontSize: 12,
-                  height: 1.5,
+              Icon(
+                Icons.info_outline_rounded,
+                size: 19,
+                color: chronosColors(context).textSecondary,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '设备尚未提供可核对的小时分布，可继续查看应用去向。',
+                  style: TextStyle(
+                    color: chronosColors(context).textSecondary,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
                 ),
               ),
             ],
           ),
+          color: chronosColors(context).surfaceRaised,
         ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 27),
       const _Section('时间去了哪里', '按应用时长排序'),
       const SizedBox(height: 12),
       _card(
@@ -1006,19 +1054,17 @@ class _LiveHourlyChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _CardTitle('屏幕使用轨迹', Icons.waves_rounded),
-        const SizedBox(height: 8),
         Text(
           '${hourLabel(peak)}–${hourLabel(peak + 3)} 最集中 · ${formatMinutes(peakMinutes)}',
           style: TextStyle(
             color: chronosColors(context).textPrimary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         const _Hint('一柱代表一小时 · 点按查看准确时长'),
-        const SizedBox(height: 18),
+        const SizedBox(height: 24),
         SizedBox(
           height: 78,
           child: Row(
@@ -1033,7 +1079,11 @@ class _LiveHourlyChart extends StatelessWidget {
                     onTap: () => onSelect(hour),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 1),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 160),
+                        curve: Curves.easeOutCubic,
                         height: math.max(4, hours[hour] / 60 * 72),
                         decoration: BoxDecoration(
                           color: hour == selectedHour

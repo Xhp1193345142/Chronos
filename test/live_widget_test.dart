@@ -209,7 +209,9 @@ void main() {
     await tester.tap(find.text('目标').last);
     await tester.pumpAndSettle();
     expect(find.text('社交应用'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('阅读'), 150);
     expect(find.text('阅读'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('社交应用'), -150);
     await tester.tap(find.text('社交应用'));
     await tester.pumpAndSettle();
     expect(find.text('周末使用不同上限'), findsOneWidget);

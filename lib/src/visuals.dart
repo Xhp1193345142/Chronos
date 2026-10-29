@@ -1,7 +1,7 @@
 part of '../main.dart';
 
 Widget _page(List<Widget> children) => ListView(
-  padding: const EdgeInsets.fromLTRB(22, 10, 22, 32),
+  padding: const EdgeInsets.fromLTRB(22, 17, 22, 38),
   children: children,
 );
 
@@ -17,8 +17,10 @@ Widget _card(
   decoration: BoxDecoration(
     color: gradient == null ? color ?? chronosColors(context).surface : null,
     gradient: gradient,
-    borderRadius: BorderRadius.circular(19),
-    border: Border.all(color: chronosColors(context).border),
+    borderRadius: BorderRadius.circular(23),
+    border: Border.all(
+      color: chronosColors(context).border.withValues(alpha: 0.74),
+    ),
   ),
   child: child,
 );
@@ -130,19 +132,17 @@ class _HourlyChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _CardTitle('屏幕使用轨迹', Icons.waves_rounded),
-        const SizedBox(height: 7),
         Text(
           '${hourLabel(peak)}–${hourLabel(peak + 3)} 最集中，使用 ${formatMinutes(DemoData.peakWindowMinutes(DemoData.hourly))}',
           style: TextStyle(
             color: chronosColors(context).textPrimary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         const _Hint('一柱代表一小时 · 点按查看时长'),
-        const SizedBox(height: 18),
+        const SizedBox(height: 24),
         SizedBox(
           height: 78,
           child: Row(
@@ -161,7 +161,11 @@ class _HourlyChart extends StatelessWidget {
                     onTap: () => onSelect(index),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 1.4),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 160),
+                        curve: Curves.easeOutCubic,
                         height: math.max(5, minutes / 40 * 72),
                         decoration: BoxDecoration(
                           color: active
@@ -570,43 +574,31 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(23, 18, 23, 15),
+    padding: const EdgeInsets.fromLTRB(23, 17, 20, 11),
     child: Row(
       children: [
         Container(
-          width: 36,
-          height: 36,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: chronosColors(context).accent,
-            borderRadius: BorderRadius.circular(12),
+            color: chronosColors(context).accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(11),
           ),
           child: Icon(
-            Icons.access_time_filled_rounded,
-            color: chronosColors(context).background,
-            size: 21,
+            Icons.access_time_rounded,
+            color: chronosColors(context).accent,
+            size: 20,
           ),
         ),
-        const SizedBox(width: 11),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'CHRONOS',
-              style: TextStyle(
-                color: chronosColors(context).textPrimary,
-                fontSize: 15,
-                letterSpacing: 2.2,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              '看见时间的形状',
-              style: TextStyle(
-                color: chronosColors(context).textSecondary,
-                fontSize: 10.5,
-              ),
-            ),
-          ],
+        const SizedBox(width: 10),
+        Text(
+          'Chronos',
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
+            fontSize: 16,
+            letterSpacing: -0.2,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const Spacer(),
         IconButton(
@@ -664,13 +656,18 @@ class _Nav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const icons = [
-      Icons.dashboard_rounded,
+      Icons.today_outlined,
+      Icons.bar_chart_outlined,
+      Icons.track_changes_outlined,
+    ];
+    const activeIcons = [
+      Icons.today_rounded,
       Icons.bar_chart_rounded,
       Icons.track_changes_rounded,
     ];
     const labels = ['今日', '趋势', '目标'];
     return Container(
-      height: 67,
+      height: 70,
       decoration: BoxDecoration(
         color: chronosColors(context).surface,
         border: Border(top: BorderSide(color: chronosColors(context).border)),
@@ -688,11 +685,11 @@ class _Nav extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      icons[index],
+                      active ? activeIcons[index] : icons[index],
                       color: active
                           ? chronosColors(context).accent
                           : chronosColors(context).textSecondary,
-                      size: 22,
+                      size: 21,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -702,7 +699,7 @@ class _Nav extends StatelessWidget {
                             ? chronosColors(context).accent
                             : chronosColors(context).textSecondary,
                         fontSize: 11,
-                        fontWeight: active ? FontWeight.w800 : FontWeight.w500,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
                   ],
@@ -723,10 +720,9 @@ class _Eyebrow extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text,
     style: TextStyle(
-      color: chronosColors(context).accent,
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.8,
+      color: chronosColors(context).textSecondary,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
     ),
   );
 }
@@ -739,8 +735,9 @@ class _Heading extends StatelessWidget {
     text,
     style: TextStyle(
       color: chronosColors(context).textPrimary,
-      fontSize: 27,
-      fontWeight: FontWeight.w800,
+      fontSize: 31,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.8,
     ),
   );
 }
@@ -751,7 +748,11 @@ class _Hint extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     text,
-    style: TextStyle(color: chronosColors(context).textSecondary, fontSize: 11),
+    style: TextStyle(
+      color: chronosColors(context).textSecondary,
+      fontSize: 12,
+      height: 1.35,
+    ),
   );
 }
 
@@ -763,20 +764,25 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     crossAxisAlignment: CrossAxisAlignment.end,
     children: [
-      Text(
-        title,
-        style: TextStyle(
-          color: chronosColors(context).textPrimary,
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
+      Flexible(
+        child: Text(
+          title,
+          style: TextStyle(
+            color: chronosColors(context).textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
-      const Spacer(),
-      Text(
-        subtitle,
-        style: TextStyle(
-          color: chronosColors(context).textSecondary,
-          fontSize: 11,
+      const SizedBox(width: 12),
+      Flexible(
+        child: Text(
+          subtitle,
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            color: chronosColors(context).textSecondary,
+            fontSize: 11.5,
+          ),
         ),
       ),
     ],
@@ -796,8 +802,8 @@ class _CardTitle extends StatelessWidget {
         title,
         style: TextStyle(
           color: chronosColors(context).textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
+          fontSize: 14.5,
+          fontWeight: FontWeight.w600,
         ),
       ),
     ],
@@ -809,17 +815,17 @@ class _Badge extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
     decoration: BoxDecoration(
       color: chronosColors(context).accent.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(100),
     ),
     child: Text(
       text,
       style: TextStyle(
         color: chronosColors(context).accent,
         fontSize: 11,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w600,
       ),
     ),
   );

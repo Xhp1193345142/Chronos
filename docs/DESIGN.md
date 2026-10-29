@@ -2,7 +2,13 @@
 
 ## Direction
 
-Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a specific, checkable observation, then show the chart that supports it. The visual hierarchy is: change from a reference, current total, when usage happened, category comparison, then a user-set goal. Use generous spacing and a small number of strong colors.
+Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a specific, checkable observation, then show the chart that supports it. The visual hierarchy is: current total with its reference, when usage happened, category comparison, then a user-set goal. Use generous spacing and a small number of strong colors.
+
+## Interface craft
+
+Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet date label and one short title. On Today, the largest type belongs to the real or clearly labeled sample total; a compact comparison sits beside that number, followed by one dominant time chart and then the ranked destinations. Do not repeat the same headline inside several equally prominent cards.
+
+Use the platform's system font, tabular figures for large durations, restrained weights, aligned card edges and consistent section spacing. Shared surfaces use a 23-point corner radius and subtle borders; reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
 
 ## Switchable themes
 
@@ -20,7 +26,7 @@ Use rounded cards, subtle separators, and a consistent 8-point spacing scale. La
 
 ## Primary screens
 
-- **Today:** a factual headline, total screen time and category ring, a tappable 24-hour activity chart, category bars with previous three same weekdays as the baseline, and a goal progress card.
+- **Today:** one large screen-time total with a factual comparison and category ring, a tappable 24-hour activity chart when the hourly data is trustworthy, category bars with previous three same weekdays as the baseline, and a goal progress card. When hourly data is unavailable, show a compact explanation and keep the app ranking available.
 - **Trends:** seven days ending on the demo's current date, one hourly intensity strip per day, selectable daily totals, a weekly average, and a short factual comparison.
 - **Goals:** selected-app limits, progress, reminder preference, and edit controls.
 
