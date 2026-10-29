@@ -10,6 +10,7 @@ class ChronosHome extends StatefulWidget {
 class _ChronosHomeState extends State<ChronosHome> {
   int tab = 0;
   int selectedDay = DemoData.todayIndex;
+  int selectedHour = 19;
   int goalMinutes = 120;
   bool reminders = true;
   String tone = '直接';
@@ -53,216 +54,161 @@ class _ChronosHomeState extends State<ChronosHome> {
     ),
   );
 
-  Widget _today() => _page([
-    const _Eyebrow('星期四  /  10月29日'),
-    const SizedBox(height: 6),
-    const _Heading('今天，时间去了哪里？'),
-    const SizedBox(height: 5),
-    const _Hint('把每一段投入，变成看得见的选择。'),
-    const SizedBox(height: 21),
-    _card(
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_rounded, color: lime, size: 16),
-              const SizedBox(width: 7),
-              const Text(
-                '今日屏幕使用',
-                style: TextStyle(
-                  color: ink,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+  Widget _today() {
+    final change = DemoData.lastWeekSameDayMinutes - DemoData.todayMinutes;
+    final topCategory = DemoData.categories.first;
+    return _page([
+      const _Eyebrow('星期四  /  10月29日'),
+      const SizedBox(height: 6),
+      _Heading('今天少用 ${formatMinutes(change)}'),
+      const SizedBox(height: 5),
+      const _Hint('与上周同日相比 · 以下为演示数据'),
+      const SizedBox(height: 20),
+      _card(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const _CardTitle('今日屏幕使用', Icons.phone_iphone_rounded),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => setState(() => tab = 1),
+                  style: TextButton.styleFrom(foregroundColor: sub),
+                  child: const Text('看趋势  →', style: TextStyle(fontSize: 12)),
                 ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => setState(() => tab = 1),
-                style: TextButton.styleFrom(foregroundColor: sub),
-                child: const Text('看趋势  →', style: TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: SizedBox(
-              width: 212,
-              height: 212,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CustomPaint(
-                    size: const Size(212, 212),
-                    painter: _RingPainter(),
-                  ),
-                  const Column(
-                    mainAxisSize: MainAxisSize.min,
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '5',
-                        style: TextStyle(
-                          color: ink,
-                          fontSize: 68,
-                          height: 0.95,
-                          fontWeight: FontWeight.w800,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          formatMinutes(DemoData.todayMinutes),
+                          key: const Key('today-duration'),
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 29,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 3),
-                      Text(
-                        '小时 42 分钟',
-                        style: TextStyle(
-                          color: ink,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        '比上周同日少 42 分钟',
-                        style: TextStyle(color: sub, fontSize: 11),
-                      ),
+                      const SizedBox(height: 7),
+                      const _Hint('今天的累计使用时长'),
+                      const SizedBox(height: 15),
+                      _Badge('↓ 比上周少 ${formatMinutes(change)}'),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 10),
+                Semantics(
+                  label: '今日使用类别占比，社交与短视频最多',
+                  child: CustomPaint(
+                    size: const Size(94, 94),
+                    painter: _RingPainter(),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          _accentNote('今天的屏幕时间，正在往你想要的方向走。'),
-        ],
+            const Divider(color: line, height: 32),
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: topCategory.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '最多：${topCategory.label}',
+                    style: const TextStyle(color: sub, fontSize: 12),
+                  ),
+                ),
+                Text(
+                  formatMinutes(topCategory.minutes),
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(19),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF202D3B), panel, panel],
+        ),
       ),
-      padding: const EdgeInsets.all(20),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF202D3B), panel, panel],
+      const SizedBox(height: 14),
+      _card(
+        _HourlyChart(
+          selectedHour: selectedHour,
+          onSelect: (hour) => setState(() => selectedHour = hour),
+        ),
       ),
-    ),
-    const SizedBox(height: 15),
-    _card(const _HourlyChart()),
-    const SizedBox(height: 24),
-    const _Section('时间分布', '今天的使用构成'),
-    const SizedBox(height: 12),
-    _card(const _CategoryBreakdown()),
-    const SizedBox(height: 23),
-    const _Section('你的目标', '按你设定的标准提醒'),
-    const SizedBox(height: 12),
-    _goalCard(() => setState(() => tab = 2)),
-  ]);
+      const SizedBox(height: 24),
+      const _Section('时间去了哪里', '对比前三周同日平均'),
+      const SizedBox(height: 12),
+      _card(const _CategoryBreakdown()),
+      const SizedBox(height: 23),
+      const _Section('你的目标', '按你设定的标准提醒'),
+      const SizedBox(height: 12),
+      _goalCard(() => setState(() => tab = 2)),
+    ]);
+  }
 
-  Widget _trends() => _page([
-    const _Eyebrow('你的时间趋势'),
-    const SizedBox(height: 6),
-    const _Heading('看见变化，才有方向。'),
-    const SizedBox(height: 6),
-    const _Hint('本周使用时间 · 点击柱形查看每天'),
-    const SizedBox(height: 22),
-    _card(
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '周${DemoData.weekdays[selectedDay]}',
-                    style: const TextStyle(color: sub, fontSize: 11),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    formatMinutes(DemoData.week[selectedDay]),
-                    key: const Key('selected-day-duration'),
-                    style: const TextStyle(
-                      color: ink,
-                      fontSize: 27,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              const _Badge('↓ 42 分钟'),
-            ],
-          ),
-          const SizedBox(height: 28),
-          SizedBox(
-            height: 190,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(7, (index) {
-                final active = index == selectedDay;
-                final minutes = DemoData.week[index];
-                return Expanded(
-                  child: Semantics(
-                    button: true,
-                    label:
-                        '周${DemoData.weekdays[index]}，${formatMinutes(minutes)}',
-                    child: InkWell(
-                      onTap: () => setState(() => selectedDay = index),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOutCubic,
-                            width: 27,
-                            height: minutes / 420 * 155,
-                            decoration: BoxDecoration(
-                              color: active ? lime : panel2,
-                              borderRadius: BorderRadius.circular(9),
-                              border: Border.all(color: active ? lime : line),
-                            ),
-                          ),
-                          const SizedBox(height: 11),
-                          Text(
-                            DemoData.weekdays[index],
-                            style: TextStyle(
-                              color: active ? ink : sub,
-                              fontSize: 12,
-                              fontWeight: active
-                                  ? FontWeight.w800
-                                  : FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const Divider(color: line, height: 28),
-          _Hint('示例中的周平均为 ${formatMinutes(DemoData.weekAverageMinutes)}'),
-        ],
+  Widget _trends() {
+    final maxMinutes = DemoData.week.reduce(math.max);
+    final minMinutes = DemoData.week.reduce(math.min);
+    final maxDay = DemoData.week.indexOf(maxMinutes);
+    final minDay = DemoData.week.indexOf(minMinutes);
+    return _page([
+      const _Eyebrow('最近七天的屏幕节奏'),
+      const SizedBox(height: 6),
+      _Heading(
+        '周${DemoData.weekdays[maxDay]}最多，周${DemoData.weekdays[minDay]}最少',
       ),
-    ),
-    const SizedBox(height: 22),
-    const _Section('这一周的发现', '基于演示数据的事实'),
-    const SizedBox(height: 12),
-    _insight(
-      Icons.trending_down_rounded,
-      lime,
-      '屏幕时间正在下降',
-      '今天比上周同日少了 42 分钟。持续观察，找到有效的改变。',
-    ),
-    const SizedBox(height: 11),
-    _insight(
-      Icons.bolt_rounded,
-      const Color(0xFFF6B765),
-      '傍晚是使用高峰',
-      '18:00–21:00 的使用最集中。目标提醒可放在这段时间之前。',
-    ),
-    const SizedBox(height: 22),
-    const _Section('类别占比', '今天的使用构成'),
-    const SizedBox(height: 12),
-    _card(const _CategoryBreakdown()),
-  ]);
+      const SizedBox(height: 6),
+      _Hint('相差 ${formatMinutes(maxMinutes - minMinutes)} · 点按某天查看'),
+      const SizedBox(height: 20),
+      _card(
+        _WeekRhythm(
+          selectedDay: selectedDay,
+          onSelect: (day) => setState(() => selectedDay = day),
+        ),
+      ),
+      const SizedBox(height: 15),
+      _card(
+        _WeeklyBars(
+          selectedDay: selectedDay,
+          onSelect: (day) => setState(() => selectedDay = day),
+        ),
+      ),
+      const SizedBox(height: 22),
+      const _Section('最近七天的发现', '基于演示数据'),
+      const SizedBox(height: 12),
+      _insight(
+        Icons.calendar_view_week_rounded,
+        lime,
+        '周${DemoData.weekdays[maxDay]}使用最多',
+        '使用 ${formatMinutes(maxMinutes)}，比周${DemoData.weekdays[minDay]}多 ${formatMinutes(maxMinutes - minMinutes)}。点按上方日期，查看每一天的高峰时段。',
+      ),
+    ]);
+  }
 
   Widget _goals() => _page([
     const _Eyebrow('目标与提醒'),

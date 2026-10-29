@@ -17,7 +17,9 @@ On Android, UsageStatsManager reads permitted app statistics after the user enab
 
 ## Demo implementation
 
-`DemoUsageRepository` provides fixed, deterministic data. Its API is deliberately separate from future native adapters. The UI shows a persistent “演示数据” label. Goal edits are in-memory for this first visual demo.
+`lib/demo_data.dart` provides fixed, deterministic data. It is deliberately separate from future native adapters. The UI shows a persistent “演示数据” label. Goal edits are in-memory for this first visual demo.
+
+The demo's hourly strips and cross-category baseline bars illustrate the intended reading experience. Their exact data granularity and composition on iOS must be validated inside the Device Activity Report extension before treating these Flutter charts as a production specification. Do not infer waking time, offline work, or a complete day from screen-use data.
 
 ## Data rules
 

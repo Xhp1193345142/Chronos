@@ -13,7 +13,7 @@ Chronos helps people understand where their screen time goes and act on goals th
 
 ## Demo scope
 
-The first demo is a polished Flutter interface using fixed sample data. It demonstrates the home dashboard, time distribution, weekly trend, goals, and interaction. It does not read real screen time, trigger a system notification, use AI, or upload data.
+The first demo is a polished Flutter interface using fixed sample data. It demonstrates the home dashboard, a 24-hour screen-use rhythm, category comparisons against sample baselines, seven-day rhythms, goals, and chart interaction. The demo's seven days end on Thursday, October 29. It does not read real screen time, trigger a system notification, use AI, or upload data.
 
 ## Later possibilities
 
@@ -27,6 +27,6 @@ Health or sleep diagnosis, automatic behavioral judgment, forced app blocking, h
 
 ## Acceptance for the demo
 
-- A user can identify today's total, the largest time category, and how usage changed over the week without reading a paragraph.
-- A user can switch between day and week, inspect the chart, and adjust the sample goal.
+- A user can identify today's total, the largest time category, the busiest three-hour period, and how usage compares with a baseline without reading a paragraph.
+- A user can tap an hour or day to inspect the chart, compare the last seven days, and adjust the sample goal.
 - Sample data is visibly labeled. UI remains usable on narrow phones and with larger text.
