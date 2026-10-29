@@ -1,5 +1,7 @@
 # Product brief
 
+For screen-by-screen behavior, rule definitions, platform fallbacks, and acceptance scenarios, see [the detailed functional design](FUNCTIONAL_SPEC.md).
+
 ## Purpose
 
 Chronos helps people understand where their screen time goes and act on goals they choose. Its value is a clear visual account of time and reminders the user can adjust.

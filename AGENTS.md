@@ -11,7 +11,7 @@ Read `README.md` and the relevant file in `docs/` before changing code. The prod
 
 ## Product and architecture
 
-- Follow `docs/PRODUCT.md` for scope, `docs/ARCHITECTURE.md` for data boundaries, and `docs/DESIGN.md` for UI behavior.
+- Follow `docs/PRODUCT.md` and `docs/FUNCTIONAL_SPEC.md` for scope and feature behavior, `docs/ARCHITECTURE.md` for data boundaries, and `docs/DESIGN.md` for UI behavior.
 - The demo uses explicitly labeled sample data. Do not present it as live device usage or silently substitute sample data after a permission failure.
 - Keep iOS Screen Time data inside Apple's permitted surfaces. Do not attempt to extract report-extension data or send it to an AI service.
 - Store usage-related data locally by default. Do not add analytics, accounts, a backend, AI calls, or third-party tracking without a specific product decision.

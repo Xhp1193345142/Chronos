@@ -37,6 +37,7 @@ flutter test
 ## 文档
 
 - [产品范围与验收](docs/PRODUCT.md)
+- [详细功能设计](docs/FUNCTIONAL_SPEC.md)
 - [技术架构与平台数据边界](docs/ARCHITECTURE.md)
 - [视觉与交互规范](docs/DESIGN.md)
 - [Vibe coding 工作流程](docs/WORKFLOW.md)
