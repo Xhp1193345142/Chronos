@@ -15,15 +15,19 @@ class GoalCheckJobService : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
         Thread {
             try {
-                val goal = GoalStore.current(this)
-                val ids = (goal?.get("packageIds") as? List<*>)
-                    ?.filterIsInstance<String>()?.toSet().orEmpty()
-                if (ids.isNotEmpty()) {
+                for (goal in GoalStore.all(this)) try {
+                    if (goal["enabled"] != true) continue
+                    val id = goal["id"] as? String ?: continue
+                    val ids = (goal["packageIds"] as? List<*>)
+                        ?.filterIsInstance<String>()?.toSet().orEmpty()
+                    if (ids.isEmpty()) continue
                     val used = UsageReader.selectedMinutesToday(this, ids)
-                    if (used != null && GoalStore.shouldNotify(this, used) && notificationsAllowed()) {
-                        postNotification(goal!!)
-                        GoalStore.markNotified(this)
+                    if (used != null && GoalStore.shouldNotify(this, id, used) && notificationsAllowed()) {
+                        postNotification(goal, GoalStore.effectiveLimit(goal))
+                        GoalStore.markNotified(this, id)
                     }
+                } catch (_: Exception) {
+                    // One malformed goal must not prevent checks for the others.
                 }
             } catch (_: Exception) {
                 // A failed usage query must not crash the process or mark a reminder as sent.
@@ -43,14 +47,13 @@ class GoalCheckJobService : JobService() {
         return (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).areNotificationsEnabled()
     }
 
-    private fun postNotification(goal: Map<String, Any?>) {
+    private fun postNotification(goal: Map<String, Any?>, limit: Int) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channel = "chronos_goals"
         manager.createNotificationChannel(
             NotificationChannel(channel, "目标提醒", NotificationManager.IMPORTANCE_DEFAULT),
         )
         val name = goal["name"] as String
-        val limit = goal["limitMinutes"] as Int
         val duration = when {
             limit < 60 -> "$limit 分钟"
             limit % 60 == 0 -> "${limit / 60} 小时"
@@ -58,7 +61,7 @@ class GoalCheckJobService : JobService() {
         }
         val body = when (goal["tone"]) {
             "温和" -> "你设置的$name 今天达到 $duration 了，休息一下吗？"
-            "严格" -> "你已达到自己设置的 $duration 上限。现在暂停刷屏，回到原定安排。"
+            "严格" -> "$name 已达到今天的 $duration 上限。现在暂停刷屏，回到原定安排。"
             else -> "$name 已达到今天的 $duration 上限。"
         }
         val intent = PendingIntent.getActivity(
@@ -78,6 +81,6 @@ class GoalCheckJobService : JobService() {
             .setContentIntent(intent)
             .setAutoCancel(true)
             .build()
-        manager.notify(4107, notification)
+        manager.notify((goal["id"] as String).hashCode(), notification)
     }
 }

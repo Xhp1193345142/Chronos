@@ -4,14 +4,17 @@ class _NativeStatus {
   const _NativeStatus({
     required this.usageGranted,
     required this.notificationsGranted,
+    required this.openGoal,
   });
 
   final bool usageGranted;
   final bool notificationsGranted;
+  final bool openGoal;
 
   factory _NativeStatus.fromMap(Map<Object?, Object?> map) => _NativeStatus(
     usageGranted: map['usageGranted'] == true,
     notificationsGranted: map['notificationsGranted'] == true,
+    openGoal: map['openGoal'] == true,
   );
 }
 
@@ -103,27 +106,33 @@ class _LiveSnapshot {
 
 class _LiveGoal {
   const _LiveGoal({
+    required this.id,
     required this.name,
     required this.packageIds,
     required this.limitMinutes,
+    required this.weekendLimitMinutes,
     required this.tone,
     required this.enabled,
     required this.pausedDate,
     required this.lastCheckedAt,
   });
 
+  final String? id;
   final String name;
   final List<String> packageIds;
   final int limitMinutes;
+  final int? weekendLimitMinutes;
   final String tone;
   final bool enabled;
   final String pausedDate;
   final DateTime? lastCheckedAt;
 
   factory _LiveGoal.fromMap(Map<Object?, Object?> map) => _LiveGoal(
+    id: map['id'] as String?,
     name: map['name'] as String? ?? '我的目标',
     packageIds: ((map['packageIds'] as List?) ?? const []).cast<String>(),
     limitMinutes: (map['limitMinutes'] as num?)?.toInt() ?? 120,
+    weekendLimitMinutes: (map['weekendLimitMinutes'] as num?)?.toInt(),
     tone: map['tone'] as String? ?? '直接',
     enabled: map['enabled'] == true,
     pausedDate: map['pausedDate'] as String? ?? '',
@@ -136,13 +145,18 @@ class _LiveGoal {
         : null,
   );
 
-  Map<String, Object> toMap() => {
+  Map<String, Object?> toMap() => {
+    'id': id,
     'name': name,
     'packageIds': packageIds,
     'limitMinutes': limitMinutes,
+    'weekendLimitMinutes': weekendLimitMinutes,
     'tone': tone,
     'enabled': enabled,
   };
+
+  int limitFor(DateTime date) =>
+      date.weekday >= 6 ? weekendLimitMinutes ?? limitMinutes : limitMinutes;
 }
 
 class _InsightPreferences {
@@ -186,6 +200,13 @@ class _NativeBridge {
     return map == null ? null : _LiveGoal.fromMap(map);
   }
 
+  Future<List<_LiveGoal>> goals() async {
+    final values = await _channel.invokeListMethod<Object?>('getGoals');
+    return (values ?? const [])
+        .map((value) => _LiveGoal.fromMap(value as Map<Object?, Object?>))
+        .toList();
+  }
+
   Future<_LiveGoal> saveGoal(_LiveGoal goal) async {
     final map = await _channel.invokeMapMethod<Object?, Object?>(
       'saveGoal',
@@ -194,23 +215,27 @@ class _NativeBridge {
     return _LiveGoal.fromMap(map!);
   }
 
-  Future<_LiveGoal?> setGoalEnabled(bool enabled) async {
+  Future<_LiveGoal?> setGoalEnabled(String id, bool enabled) async {
     final map = await _channel.invokeMapMethod<Object?, Object?>(
       'setGoalEnabled',
-      {'enabled': enabled},
+      {'id': id, 'enabled': enabled},
     );
     return map == null ? null : _LiveGoal.fromMap(map);
   }
 
-  Future<_LiveGoal?> pauseGoalToday() async {
+  Future<_LiveGoal?> pauseGoalToday(String id) async {
     final map = await _channel.invokeMapMethod<Object?, Object?>(
       'pauseGoalToday',
+      {'id': id},
     );
     return map == null ? null : _LiveGoal.fromMap(map);
   }
 
-  Future<int?> selectedGoalMinutes() =>
-      _channel.invokeMethod<int>('selectedGoalMinutes');
+  Future<int?> selectedGoalMinutes(String id) =>
+      _channel.invokeMethod<int>('selectedGoalMinutes', {'id': id});
+
+  Future<void> deleteGoal(String id) =>
+      _channel.invokeMethod('deleteGoal', {'id': id});
 
   Future<void> openUsageSettings() =>
       _channel.invokeMethod('openUsageSettings');

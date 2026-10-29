@@ -12,9 +12,10 @@ class _LiveExperienceState extends State<_LiveExperience>
   final _bridge = _NativeBridge();
   _NativeStatus? _status;
   _LiveSnapshot? _snapshot;
-  _LiveGoal? _goal;
+  List<_LiveGoal> _goals = [];
+  _LiveGoal? get _goal => _goals.isEmpty ? null : _goals.first;
   _InsightPreferences? _insightPrefs;
-  int? _goalUsedMinutes;
+  Map<String, int?> _goalUsedMinutes = {};
   String? _error;
   bool _loading = true;
   bool _demo = false;
@@ -49,17 +50,23 @@ class _LiveExperienceState extends State<_LiveExperience>
     if (_snapshot == null) setState(() => _loading = true);
     try {
       final status = await _bridge.status();
-      final goal = await _bridge.goal();
+      final goals = await _bridge.goals();
       final insightPrefs = await _bridge.insightPreferences();
       final snapshot = status.usageGranted ? await _bridge.snapshot() : null;
-      final used = status.usageGranted && goal != null
-          ? await _bridge.selectedGoalMinutes()
-          : null;
+      final used = <String, int?>{};
+      if (status.usageGranted) {
+        for (final goal in goals) {
+          if (goal.id != null) {
+            used[goal.id!] = await _bridge.selectedGoalMinutes(goal.id!);
+          }
+        }
+      }
       if (!mounted || _demo || version != _refreshVersion) return;
       setState(() {
         _status = status;
+        if (status.openGoal) _tab = 2;
         if (status.usageGranted) _hadUsageAccess = true;
-        _goal = goal;
+        _goals = goals;
         _insightPrefs = insightPrefs;
         _snapshot = snapshot;
         _goalUsedMinutes = used;
@@ -382,7 +389,10 @@ class _LiveExperienceState extends State<_LiveExperience>
         ),
       ),
       const SizedBox(height: 23),
-      const _Section('你的目标', '按自己设定的标准提醒'),
+      _Section(
+        '你的目标',
+        _goals.length > 1 ? '共 ${_goals.length} 个目标 · 在目标页管理' : '按自己设定的标准提醒',
+      ),
       const SizedBox(height: 12),
       _goalSummary(onTap: () => setState(() => _tab = 2)),
     ]);
@@ -476,6 +486,12 @@ class _LiveExperienceState extends State<_LiveExperience>
           ),
         ),
       ],
+      if (complete.length >= 3) ...[
+        const SizedBox(height: 22),
+        const _Section('周回顾', '仅统计可核对的完整日期'),
+        const SizedBox(height: 12),
+        _card(_WeeklyReview(days: complete)),
+      ],
       if (_snapshot!.monthDays.isNotEmpty) ...[
         const SizedBox(height: 22),
         const _Section('近 30 天', '屏幕使用强度'),
@@ -498,50 +514,18 @@ class _LiveExperienceState extends State<_LiveExperience>
     const SizedBox(height: 6),
     const _Hint('达到上限后提醒一次，送达时间可能受系统影响。'),
     const SizedBox(height: 22),
-    _goalSummary(onTap: _showGoalEditor),
-    const SizedBox(height: 15),
-    if (_goal != null) ...[
-      _card(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _CardTitle('目标控制', Icons.tune_rounded),
-            const SizedBox(height: 12),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('启用目标', style: TextStyle(color: ink)),
-              value: _goal!.enabled,
-              onChanged: (value) async {
-                await _bridge.setGoalEnabled(value);
-                await _refresh();
-              },
-            ),
-            Row(
-              children: [
-                OutlinedButton(
-                  onPressed: _showGoalEditor,
-                  child: const Text('编辑目标'),
-                ),
-                const SizedBox(width: 10),
-                OutlinedButton(
-                  onPressed: () async {
-                    if (_goal?.pausedDate == _dateKey(DateTime.now())) {
-                      await _bridge.setGoalEnabled(true);
-                    } else {
-                      await _bridge.pauseGoalToday();
-                    }
-                    await _refresh();
-                  },
-                  child: Text(
-                    _goal?.pausedDate == _dateKey(DateTime.now())
-                        ? '立即恢复'
-                        : '暂停至明天',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    if (_goals.isEmpty) _goalSummary(onTap: () => _showGoalEditor(null)),
+    for (final goal in _goals) ...[
+      _goalSummary(goal: goal, onTap: () => _showGoalEditor(goal)),
+      const SizedBox(height: 10),
+      _goalControls(goal),
+      const SizedBox(height: 15),
+    ],
+    if (_goals.isNotEmpty) ...[
+      OutlinedButton.icon(
+        onPressed: () => _showGoalEditor(null),
+        icon: const Icon(Icons.add),
+        label: const Text('新增目标'),
       ),
       const SizedBox(height: 15),
       _card(
@@ -572,8 +556,82 @@ class _LiveExperienceState extends State<_LiveExperience>
     ],
   ]);
 
-  Widget _goalSummary({required VoidCallback onTap}) {
-    final goal = _goal;
+  Widget _goalControls(_LiveGoal goal) => _card(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('启用目标', style: TextStyle(color: ink)),
+            value: goal.enabled,
+            onChanged: (value) async {
+              await _bridge.setGoalEnabled(goal.id!, value);
+              await _refresh();
+            },
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            TextButton(
+              onPressed: () => _showGoalEditor(goal),
+              child: const Text('编辑'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (goal.pausedDate == _dateKey(DateTime.now())) {
+                  await _bridge.setGoalEnabled(goal.id!, true);
+                } else {
+                  await _bridge.pauseGoalToday(goal.id!);
+                }
+                await _refresh();
+              },
+              child: Text(
+                goal.pausedDate == _dateKey(DateTime.now()) ? '立即恢复' : '暂停至明天',
+              ),
+            ),
+            TextButton(
+              onPressed: () => _confirmDeleteGoal(goal),
+              child: const Text(
+                '删除',
+                style: TextStyle(color: Color(0xFFF6B765)),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _confirmDeleteGoal(_LiveGoal goal) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('删除「${goal.name}」？'),
+        content: const Text('这会删除目标及其提醒记录，不会删除系统使用时间。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _bridge.deleteGoal(goal.id!);
+      await _refresh();
+    }
+  }
+
+  Widget _goalSummary({required VoidCallback onTap, _LiveGoal? goal}) {
+    goal ??= _goal;
     if (goal == null) {
       return _card(
         InkWell(
@@ -593,6 +651,8 @@ class _LiveExperienceState extends State<_LiveExperience>
     }
     final today = _snapshot?.today;
     final paused = goal.pausedDate == _dateKey(DateTime.now());
+    final usedMinutes = _goalUsedMinutes[goal.id];
+    final limit = goal.limitFor(DateTime.now());
     final selectedNames = goal.packageIds
         .map((id) {
           for (final app in today?.apps ?? <_LiveAppUsage>[]) {
@@ -633,9 +693,9 @@ class _LiveExperienceState extends State<_LiveExperience>
             ),
             const SizedBox(height: 17),
             Text(
-              _goalUsedMinutes == null
+              usedMinutes == null
                   ? '等待使用数据'
-                  : '${formatMinutes(_goalUsedMinutes!)} / ${formatMinutes(goal.limitMinutes)}',
+                  : '${formatMinutes(usedMinutes)} / ${formatMinutes(limit)}',
               style: const TextStyle(
                 color: ink,
                 fontSize: 19,
@@ -644,9 +704,9 @@ class _LiveExperienceState extends State<_LiveExperience>
             ),
             const SizedBox(height: 10),
             LinearProgressIndicator(
-              value: _goalUsedMinutes == null
+              value: usedMinutes == null
                   ? 0
-                  : (_goalUsedMinutes! / goal.limitMinutes).clamp(0.0, 1.0),
+                  : (usedMinutes / limit).clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: line,
               color: lime,
@@ -682,31 +742,36 @@ class _LiveExperienceState extends State<_LiveExperience>
         byId.putIfAbsent(app.id, () => app);
       }
     }
-    for (final id in _goal?.packageIds ?? <String>[]) {
-      byId.putIfAbsent(
-        id,
-        () => _LiveAppUsage(
-          id: id,
-          label: id.split('.').last,
-          minutes: 0,
-          category: '其他',
-        ),
-      );
+    for (final goal in _goals) {
+      for (final id in goal.packageIds) {
+        byId.putIfAbsent(
+          id,
+          () => _LiveAppUsage(
+            id: id,
+            label: id.split('.').last,
+            minutes: 0,
+            category: '其他',
+          ),
+        );
+      }
     }
     return byId.values.toList()..sort((a, b) => b.minutes.compareTo(a.minutes));
   }
 
-  void _showGoalEditor() {
+  void _showGoalEditor(_LiveGoal? existing) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+      ),
       backgroundColor: panel,
       builder: (sheetContext) => _LiveGoalEditor(
-        existing: _goal,
+        existing: existing,
         apps: _availableApps(),
         onSave: (value) async {
           await _bridge.saveGoal(value);
-          if (_status?.notificationsGranted != true) {
+          if (value.enabled && _status?.notificationsGranted != true) {
             await _bridge.requestNotificationPermission();
           }
           await _refresh();
@@ -1430,6 +1495,61 @@ class _SameWeekdayBaseline extends StatelessWidget {
   }
 }
 
+class _WeeklyReview extends StatelessWidget {
+  const _WeeklyReview({required this.days});
+  final List<_LiveDay> days;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = days.fold<int>(0, (sum, day) => sum + day.totalMinutes);
+    final average = (total / days.length).round();
+    final weekdays = days.where((day) => day.date.weekday <= 5).toList();
+    final weekends = days.where((day) => day.date.weekday >= 6).toList();
+    final weekdayAverage = weekdays.isEmpty
+        ? null
+        : (weekdays.fold<int>(0, (sum, day) => sum + day.totalMinutes) /
+                  weekdays.length)
+              .round();
+    final weekendAverage = weekends.isEmpty
+        ? null
+        : (weekends.fold<int>(0, (sum, day) => sum + day.totalMinutes) /
+                  weekends.length)
+              .round();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _CardTitle('本周已知时间', Icons.summarize_outlined),
+        const SizedBox(height: 12),
+        Text(
+          formatMinutes(total),
+          style: const TextStyle(
+            color: ink,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '${days.length} 个完整日 · 日均 ${formatMinutes(average)}',
+          style: const TextStyle(color: sub, fontSize: 12),
+        ),
+        if (weekdayAverage != null && weekendAverage != null) ...[
+          const Divider(color: line, height: 25),
+          Text(
+            '工作日均值 ${formatMinutes(weekdayAverage)} · 周末均值 ${formatMinutes(weekendAverage)}',
+            style: const TextStyle(color: ink, fontSize: 12),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '工作日 ${weekdays.length} 天，周末 ${weekends.length} 天；今天不计入。',
+            style: const TextStyle(color: sub, fontSize: 11),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _LiveGoalEditor extends StatefulWidget {
   const _LiveGoalEditor({
     required this.existing,
@@ -1448,7 +1568,9 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
   late final TextEditingController _name;
   late Set<String> _ids;
   late int _limit;
+  int? _weekendLimit;
   late String _tone;
+  late bool _enabled;
   bool _saving = false;
   String? _error;
 
@@ -1458,7 +1580,9 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
     _name = TextEditingController(text: widget.existing?.name ?? '少一点无意识刷屏');
     _ids = widget.existing?.packageIds.toSet() ?? <String>{};
     _limit = widget.existing?.limitMinutes ?? 120;
+    _weekendLimit = widget.existing?.weekendLimitMinutes;
     _tone = widget.existing?.tone ?? '直接';
+    _enabled = widget.existing?.enabled ?? true;
   }
 
   @override
@@ -1529,7 +1653,7 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
             ),
             const SizedBox(height: 12),
             Text(
-              '每日合计上限 · ${formatMinutes(_limit)}',
+              '${_weekendLimit == null ? '每日' : '工作日'}合计上限 · ${formatMinutes(_limit)}',
               style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
             ),
             Slider(
@@ -1540,6 +1664,38 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
               onChanged: (value) => setState(
                 () => _limit = ((value / 15).round() * 15).clamp(15, 720),
               ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('周末使用不同上限'),
+              value: _weekendLimit != null,
+              onChanged: (enabled) =>
+                  setState(() => _weekendLimit = enabled ? _limit : null),
+            ),
+            if (_weekendLimit != null) ...[
+              Text(
+                '周末合计上限 · ${formatMinutes(_weekendLimit!)}',
+                style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+              ),
+              Slider(
+                value: _weekendLimit!.toDouble(),
+                min: 15,
+                max: 720,
+                divisions: 47,
+                onChanged: (value) => setState(
+                  () => _weekendLimit = ((value / 15).round() * 15).clamp(
+                    15,
+                    720,
+                  ),
+                ),
+              ),
+            ],
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('启用目标提醒'),
+              subtitle: const Text('关闭后保留目标，不检查阈值'),
+              value: _enabled,
+              onChanged: (value) => setState(() => _enabled = value),
             ),
             const SizedBox(height: 10),
             const Text(
@@ -1561,7 +1717,11 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
             ),
             const SizedBox(height: 16),
             Text(
-              _previewCopy(_tone, _name.text, _limit),
+              _previewCopy(
+                _tone,
+                _name.text,
+                DateTime.now().weekday >= 6 ? _weekendLimit ?? _limit : _limit,
+              ),
               style: const TextStyle(color: sub, height: 1.45),
             ),
             if (_error != null)
@@ -1586,13 +1746,15 @@ class _LiveGoalEditorState extends State<_LiveGoalEditor> {
                         try {
                           await widget.onSave(
                             _LiveGoal(
+                              id: widget.existing?.id,
                               name: _name.text.trim().isEmpty
                                   ? '我的目标'
                                   : _name.text.trim(),
                               packageIds: _ids.toList(),
                               limitMinutes: _limit,
+                              weekendLimitMinutes: _weekendLimit,
                               tone: _tone,
-                              enabled: true,
+                              enabled: _enabled,
                               pausedDate: '',
                               lastCheckedAt: null,
                             ),
@@ -1619,7 +1781,7 @@ String _previewCopy(String tone, String name, int limit) {
   final duration = formatMinutes(limit);
   return switch (tone) {
     '温和' => '你设置的$label 今天达到 $duration 了，休息一下吗？',
-    '严格' => '你已达到自己设置的 $duration 上限。现在暂停刷屏，回到原定安排。',
+    '严格' => '$label 已达到今天的 $duration 上限。现在暂停刷屏，回到原定安排。',
     _ => '$label 已达到今天的 $duration 上限。',
   };
 }

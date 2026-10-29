@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
@@ -12,17 +13,34 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var notificationResult: MethodChannel.Result? = null
+    private var pendingOpenGoal = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        pendingOpenGoal = intent?.getBooleanExtra("openGoal", false) == true
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        pendingOpenGoal = intent.getBooleanExtra("openGoal", false)
+        setIntent(intent)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "chronos/native")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "status" -> result.success(mapOf(
+                    "status" -> {
+                        val openGoal = pendingOpenGoal
+                        pendingOpenGoal = false
+                        result.success(mapOf(
                         "usageGranted" to UsageReader.hasAccess(this),
                         "notificationsGranted" to notificationsGranted(),
+                        "openGoal" to openGoal,
                         "platform" to "android",
-                    ))
+                        ))
+                    }
                     "openUsageSettings" -> {
                         try {
                             startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
@@ -59,6 +77,7 @@ class MainActivity : FlutterActivity() {
                         }
                     }.start()
                     "getGoal" -> result.success(GoalStore.current(this))
+                    "getGoals" -> result.success(GoalStore.all(this))
                     "saveGoal" -> try {
                         val input = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
                         result.success(GoalStore.save(this, input))
@@ -66,9 +85,16 @@ class MainActivity : FlutterActivity() {
                         result.error("invalid_goal", error.message, null)
                     }
                     "setGoalEnabled" -> result.success(
-                        GoalStore.setEnabled(this, call.argument<Boolean>("enabled") == true),
+                        GoalStore.setEnabled(this, call.argument<String>("id").orEmpty(),
+                            call.argument<Boolean>("enabled") == true),
                     )
-                    "pauseGoalToday" -> result.success(GoalStore.pauseToday(this))
+                    "pauseGoalToday" -> result.success(
+                        GoalStore.pauseToday(this, call.argument<String>("id").orEmpty()),
+                    )
+                    "deleteGoal" -> {
+                        GoalStore.deleteGoal(this, call.argument<String>("id").orEmpty())
+                        result.success(true)
+                    }
                     "insightPreferences" -> result.success(GoalStore.insightPreferences(this))
                     "setInsightsEnabled" -> result.success(GoalStore.setInsightsEnabled(
                         this, call.argument<Boolean>("enabled") == true,
@@ -76,7 +102,9 @@ class MainActivity : FlutterActivity() {
                     "suppressWeekRange" -> result.success(GoalStore.suppressWeekRange(this))
                     "restoreInsights" -> result.success(GoalStore.restoreInsights(this))
                     "selectedGoalMinutes" -> {
-                        val ids = (GoalStore.current(this)?.get("packageIds") as? List<*>)
+                        val goalId = call.argument<String>("id").orEmpty()
+                        val ids = (GoalStore.all(this).firstOrNull { it["id"] == goalId }
+                            ?.get("packageIds") as? List<*>)
                             ?.filterIsInstance<String>()?.toSet().orEmpty()
                         Thread {
                             try {

@@ -20,8 +20,8 @@ void main() {
           switch (call.method) {
             case 'status':
               return {'usageGranted': false, 'notificationsGranted': false};
-            case 'getGoal':
-              return null;
+            case 'getGoals':
+              return [];
             case 'insightPreferences':
               return {'enabled': true, 'weekRangeSuppressedUntil': 0};
             default:
@@ -46,8 +46,8 @@ void main() {
           switch (call.method) {
             case 'status':
               return {'usageGranted': true, 'notificationsGranted': false};
-            case 'getGoal':
-              return null;
+            case 'getGoals':
+              return [];
             case 'insightPreferences':
               return {'enabled': true, 'weekRangeSuppressedUntil': 0};
             case 'snapshot':
@@ -115,8 +115,8 @@ void main() {
           switch (call.method) {
             case 'status':
               return {'usageGranted': granted, 'notificationsGranted': false};
-            case 'getGoal':
-              return null;
+            case 'getGoals':
+              return [];
             case 'insightPreferences':
               return {'enabled': true, 'weekRangeSuppressedUntil': 0};
             case 'snapshot':
@@ -145,5 +145,74 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('使用权限已关闭'), findsOneWidget);
     expect(find.byKey(const Key('live-today-total')), findsNothing);
+  });
+
+  testWidgets('multiple goals remain separate and weekend limit is editable', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': true, 'notificationsGranted': false};
+            case 'getGoals':
+              return [
+                {
+                  'id': 'social',
+                  'name': '社交应用',
+                  'packageIds': ['com.example.social'],
+                  'limitMinutes': 120,
+                  'weekendLimitMinutes': 180,
+                  'tone': '直接',
+                  'enabled': true,
+                },
+                {
+                  'id': 'reading',
+                  'name': '阅读',
+                  'packageIds': ['com.example.read'],
+                  'limitMinutes': 60,
+                  'tone': '温和',
+                  'enabled': false,
+                },
+              ];
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            case 'snapshot':
+              return {
+                'state': 'ready',
+                'days': [
+                  {
+                    'date': '2026-10-29',
+                    'totalMinutes': 90,
+                    'available': true,
+                    'complete': false,
+                    'apps': [
+                      {
+                        'id': 'com.example.social',
+                        'label': '社交',
+                        'minutes': 50,
+                      },
+                      {'id': 'com.example.read', 'label': '阅读器', 'minutes': 40},
+                    ],
+                  },
+                ],
+              };
+            case 'selectedGoalMinutes':
+              return call.arguments['id'] == 'social' ? 50 : 40;
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('目标').last);
+    await tester.pumpAndSettle();
+    expect(find.text('社交应用'), findsOneWidget);
+    expect(find.text('阅读'), findsOneWidget);
+    await tester.tap(find.text('社交应用'));
+    await tester.pumpAndSettle();
+    expect(find.text('周末使用不同上限'), findsOneWidget);
+    expect(find.text('周末合计上限 · 3 小时'), findsOneWidget);
   });
 }

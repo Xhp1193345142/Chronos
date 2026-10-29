@@ -17,7 +17,7 @@ On Android, UsageStatsManager reads permitted app statistics after the user enab
 
 ## Current implementation
 
-Android's `UsageReader` runs behind the `chronos/native` method channel and returns dated snapshots with explicit `available` and `reason` fields. It cross-checks aggregate app foreground time against screen-interactive time and suppresses clearly inconsistent dates. `GoalStore` keeps one local goal and insight preferences in private SharedPreferences. `GoalCheckJobService` schedules inexact periodic checks through JobScheduler and sends at most one notification per local date. The Flutter live pages never replace a permission or loading failure with demo values.
+Android's `UsageReader` runs behind the `chronos/native` method channel and returns dated snapshots with explicit `available` and `reason` fields. It cross-checks aggregate app foreground time against screen-interactive time and suppresses clearly inconsistent dates. `GoalStore` keeps multiple local goals and insight preferences in private SharedPreferences, migrating the earlier single-goal format. `GoalCheckJobService` schedules inexact periodic checks through JobScheduler and sends at most one notification per goal per local date. The Flutter live pages never replace a permission or loading failure with demo values.
 
 `lib/demo_data.dart` still provides fixed, deterministic data for Web previews and the optional on-device demo. It is separate from the native adapter. Every demo page shows “演示数据”; demo goal edits remain in memory.
 
