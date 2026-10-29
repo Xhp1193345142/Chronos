@@ -17,7 +17,7 @@ Each task should state:
 2. Make the smallest coherent change. Keep fixtures separate from production data sources.
 3. Run formatting, analysis, relevant tests, and a visual check when a UI changes.
 4. Review the diff for unrelated changes, secrets, misleading copy, and broken permission behavior.
-5. Commit on `dev` with a descriptive message; push `dev`; report verification and remaining limitations.
+5. Commit on `dev` with a descriptive message; push `dev`; check the GitHub Actions result and report verification and remaining limitations.
 
 ## Reusable task prompt
 

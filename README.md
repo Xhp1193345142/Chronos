@@ -30,6 +30,8 @@ flutter test
 
 所有开发提交都在 `dev` 分支完成，不创建其他开发分支。一次只允许一个编码对话修改工作区；其他模型可只读审查。具体规则见 [AGENTS.md](AGENTS.md) 和 [开发流程](docs/WORKFLOW.md)。
 
+每次推送到 `dev` 都会触发 GitHub Actions，运行格式检查、静态分析和测试。
+
 ## 文档
 
 - [产品范围与验收](docs/PRODUCT.md)
