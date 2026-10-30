@@ -13,17 +13,17 @@
 安装 Flutter 3.47 或更新的稳定版，然后在仓库根目录运行：
 
 ```sh
-flutter pub get
-flutter run -d chrome   # 浏览器始终展示带标记的演示数据
-flutter run -d <android-device-id>  # Android 真机可连接系统使用时间
+make deps
+make start                     # 构建并在后台启动 http://127.0.0.1:8765/
+make run-android DEVICE=<id>   # Android 真机可连接系统使用时间
 ```
+
+本地预览掉线时运行 `make restart`；用 `make status` 查看状态，`make logs` 查看日志，`make stop` 停止。也可运行 `make run-web` 在 Chrome 中调试，浏览器始终展示带标记的演示数据。`make help` 列出全部命令。若 Flutter 不在 `PATH` 中，可以指定 `FLUTTER=/path/to/flutter`。
 
 验证代码：
 
 ```sh
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
+make check
 ```
 
 本机安装 iOS App 需要完整 Xcode；Android App 需要 Android SDK 和已配置的设备或模拟器。Web 构建仅用于快速预览界面，产品目标平台仍是 iOS 和 Android。
