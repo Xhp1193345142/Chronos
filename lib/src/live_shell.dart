@@ -419,14 +419,13 @@ class _LiveExperienceState extends State<_LiveExperience>
       const _Section('一天的节奏', '点按查看每小时'),
       const SizedBox(height: 12),
       if (today.hourly != null && today.hourly!.length == 24)
-        _card(
+        _chartPanel(
           context,
           _LiveHourlyChart(
             hours: today.hourly!,
             selectedHour: _selectedHour,
             onSelect: (value) => setState(() => _selectedHour = value),
           ),
-          padding: const EdgeInsets.all(20),
         )
       else
         _card(
@@ -456,7 +455,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       const SizedBox(height: 27),
       const _Section('时间去了哪里', '按应用时长排序'),
       const SizedBox(height: 12),
-      _card(
+      _chartPanel(
         context,
         _LiveAppList(
           apps: today.apps,
@@ -562,7 +561,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       ],
       const SizedBox(height: 27),
       if (days.any((day) => day.hourly?.length == 24)) ...[
-        _card(
+        _chartPanel(
           context,
           _SevenDayHourly(
             days: days,
@@ -572,7 +571,7 @@ class _LiveExperienceState extends State<_LiveExperience>
         ),
         const SizedBox(height: 15),
       ],
-      _card(
+      _chartPanel(
         context,
         _LiveDailyChart(
           days: days,
@@ -623,7 +622,7 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 22),
         const _Section('近 30 天', '屏幕使用强度'),
         const SizedBox(height: 12),
-        _card(
+        _chartPanel(
           context,
           _MonthHeatmap(
             days: _snapshot!.monthDays,
@@ -640,7 +639,7 @@ class _LiveExperienceState extends State<_LiveExperience>
     const SizedBox(height: 7),
     const _Heading('目标'),
     const SizedBox(height: 4),
-    const _Hint('由你定义，更好的节奏。'),
+    const _Hint('提醒只针对你设置的上限。'),
     const SizedBox(height: 27),
     _Section('使用目标', _goals.isEmpty ? '由你决定提醒时机' : '共 ${_goals.length} 个目标'),
     const SizedBox(height: 12),
@@ -1187,24 +1186,25 @@ class _LiveAppList extends StatelessWidget {
         const SizedBox(height: 15),
         ...apps.take(10).toList().asMap().entries.map((entry) {
           final app = entry.value;
-          final color = colors.categoryAt(entry.key);
           return Padding(
-            padding: const EdgeInsets.only(bottom: 17),
+            padding: const EdgeInsets.only(bottom: 18),
             child: InkWell(
               onTap: onAppTap == null ? null : () => onAppTap!(app),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
+                      SizedBox(
+                        width: 26,
+                        child: Text(
+                          '${entry.key + 1}'.padLeft(2, '0'),
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 10,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           app.label,
@@ -1226,14 +1226,20 @@ class _LiveAppList extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 7),
-                  LinearProgressIndicator(
-                    value: totalMinutes == 0
-                        ? 0
-                        : (app.minutes / totalMinutes).clamp(0.0, 1.0),
-                    color: color,
-                    backgroundColor: chronosColors(context).border,
-                    minHeight: 7,
+                  const SizedBox(height: 9),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 26),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: totalMinutes == 0
+                            ? 0
+                            : (app.minutes / totalMinutes).clamp(0.0, 1.0),
+                        color: colors.accent,
+                        backgroundColor: colors.border.withValues(alpha: 0.65),
+                        minHeight: 3,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1484,7 +1490,7 @@ class _LiveDailyChart extends StatelessWidget {
       children: [
         const _CardTitle('每日累计', Icons.bar_chart_rounded),
         const SizedBox(height: 7),
-        const _Hint('点按日期查看 · 今天仍在进行中'),
+        const _Hint('点按日期查看 · 今天仍在进行中 · 细线表示已知日期日均'),
         const SizedBox(height: 16),
         Text(
           '${day.date.month}月${day.date.day}日 · ${day.available ? formatMinutes(day.totalMinutes) : '无数据'}${day.available && !day.complete ? '（进行中）' : ''}',
@@ -1497,62 +1503,86 @@ class _LiveDailyChart extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 157,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(days.length, (index) {
-              final item = days[index];
-              return Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: selected == index,
-                  label:
-                      '${item.date.month}月${item.date.day}日，${item.available ? formatMinutes(item.totalMinutes) : '无数据'}',
-                  child: InkWell(
-                    onTap: () => onSelect(index),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${item.date.day}',
-                          style: TextStyle(
-                            color: chronosColors(context).textSecondary,
-                            fontSize: 10,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          width: 25,
-                          height: item.available
-                              ? math.max(
-                                  4,
-                                  item.totalMinutes / maxMinutes * 104,
-                                )
-                              : 3,
-                          decoration: BoxDecoration(
-                            color: !item.available
-                                ? chronosColors(context).border
-                                : selected == index
-                                ? chronosColors(context).accent
-                                : chronosColors(context).usageLow,
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          _weekday(item.date),
-                          style: TextStyle(
-                            color: selected == index
-                                ? chronosColors(context).accent
-                                : chronosColors(context).textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
+          child: Stack(
+            children: [
+              if (days.where((item) => item.available).isNotEmpty)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom:
+                      22 +
+                      days
+                              .where((item) => item.available)
+                              .map((item) => item.totalMinutes)
+                              .reduce((a, b) => a + b) /
+                          days.where((item) => item.available).length /
+                          maxMinutes *
+                          104,
+                  child: Container(
+                    height: 1,
+                    color: chronosColors(context).textSecondary
+                        .withValues(alpha: 0.58),
                   ),
                 ),
-              );
-            }),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(days.length, (index) {
+                  final item = days[index];
+                  return Expanded(
+                    child: Semantics(
+                      button: true,
+                      selected: selected == index,
+                      label:
+                          '${item.date.month}月${item.date.day}日，${item.available ? formatMinutes(item.totalMinutes) : '无数据'}',
+                      child: InkWell(
+                        onTap: () => onSelect(index),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${item.date.day}',
+                              style: TextStyle(
+                                color: chronosColors(context).textSecondary,
+                                fontSize: 10,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Container(
+                              width: 18,
+                              height: item.available
+                                  ? math.max(
+                                      4,
+                                      item.totalMinutes / maxMinutes * 104,
+                                    )
+                                  : 3,
+                              decoration: BoxDecoration(
+                                color: !item.available
+                                    ? chronosColors(context).border
+                                    : selected == index
+                                    ? chronosColors(context).accent
+                                    : chronosColors(context).accent
+                                          .withValues(alpha: 0.26),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              _weekday(item.date),
+                              style: TextStyle(
+                                color: selected == index
+                                    ? chronosColors(context).accent
+                                    : chronosColors(context).textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           ),
         ),
       ],

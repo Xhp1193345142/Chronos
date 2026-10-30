@@ -64,7 +64,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       const SizedBox(height: 7),
       const _Heading('今天'),
       const SizedBox(height: 4),
-      const _Hint('看清时间的去向 · 以下为演示数据'),
+      const _Hint('应用与时段 · 以下为演示数据'),
       const SizedBox(height: 23),
       _card(
         context,
@@ -168,18 +168,17 @@ class _ChronosHomeState extends State<ChronosHome> {
       const SizedBox(height: 27),
       const _Section('一天的节奏', '点按查看每小时'),
       const SizedBox(height: 12),
-      _card(
+      _chartPanel(
         context,
         _HourlyChart(
           selectedHour: selectedHour,
           onSelect: (hour) => setState(() => selectedHour = hour),
         ),
-        padding: const EdgeInsets.all(20),
       ),
       const SizedBox(height: 27),
       const _Section('时间去了哪里', '对比前三周同日平均'),
       const SizedBox(height: 12),
-      _card(context, const _CategoryBreakdown()),
+      _chartPanel(context, const _CategoryBreakdown()),
       const SizedBox(height: 23),
       const _Section('你的目标', '按你设定的标准提醒'),
       const SizedBox(height: 12),
@@ -237,9 +236,9 @@ class _ChronosHomeState extends State<ChronosHome> {
         padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
       ),
       const SizedBox(height: 27),
-      const _Section('七天节奏', '一行代表一天'),
+      const _Section('七天节奏', '每格 1 小时；颜色表示使用时长'),
       const SizedBox(height: 12),
-      _card(
+      _chartPanel(
         context,
         _WeekRhythm(
           selectedDay: selectedDay,
@@ -249,7 +248,7 @@ class _ChronosHomeState extends State<ChronosHome> {
       const SizedBox(height: 27),
       const _Section('每日累计', '点按查看当天'),
       const SizedBox(height: 12),
-      _card(
+      _chartPanel(
         context,
         _WeeklyBars(
           selectedDay: selectedDay,
@@ -274,9 +273,9 @@ class _ChronosHomeState extends State<ChronosHome> {
     const SizedBox(height: 7),
     const _Heading('目标'),
     const SizedBox(height: 4),
-    const _Hint('由你定义，更好的节奏。'),
+    const _Hint('提醒只针对你设置的上限。'),
     const SizedBox(height: 27),
-    const _Section('使用目标', '决定权始终在你'),
+    const _Section('使用目标', '抖音与小红书'),
     const SizedBox(height: 12),
     _goalCard(null),
     const SizedBox(height: 27),

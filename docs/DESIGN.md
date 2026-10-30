@@ -8,7 +8,7 @@ Chronos is a calm instrument panel for time, not a punishment dashboard. Lead wi
 
 Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, the largest type belongs to the real or clearly labeled sample total; a compact comparison sits beside that number, followed by one dominant time chart and then the ranked destinations. On Trends, a single summary precedes the seven-day rhythm and daily totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
 
-Use the platform's system font, tabular figures for large durations, restrained weights, aligned card edges and consistent section spacing. Shared surfaces use a 23-point corner radius and subtle borders; reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
+Use the platform's system font, tabular figures for large durations, restrained weights, aligned edges and consistent section spacing. Summary and control surfaces use a 20-point corner radius and subtle borders. Data charts sit on the page with a fine top rule instead of being enclosed in repeated cards. Reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
 
 The app icon keeps Chronos's open-clock C mark in lavender on midnight indigo. The selected source image lives at `assets/branding/chronos-icon-source.png`; `tools/generate_icons.py` documents how platform icon sizes are derived. Do not reintroduce the old neon-green mark when updating platform assets.
 
@@ -24,7 +24,7 @@ The appearance picker also offers **跟随系统**: light maps to 晨雾纸感 a
 
 Use `positive` for a factual favorable comparison, `caution` for elevated-but-ordinary usage, and `danger` only for an exceeded goal or destructive action. Color never replaces a numeric label, icon or explicit state text. Each theme has its own ordered usage-intensity scale and stable category-color order.
 
-Use rounded cards, subtle separators, and a consistent 8-point spacing scale. Large numbers should use tabular figures where available. Motion should explain a transition or selection; never animate charts simply to decorate them.
+Use quiet surfaces, subtle separators, and a consistent 8-point spacing scale. Large numbers should use tabular figures where available. Usage intensity is a tonal scale within each theme; category colors are reserved for actual categories, not assigned to ranked apps. Daily bars include a visible average rule. Category comparisons use a colored duration line and a hollow baseline point. Motion should explain a transition or selection; never animate charts simply to decorate them.
 
 ## Primary screens
 

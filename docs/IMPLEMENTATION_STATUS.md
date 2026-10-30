@@ -1,4 +1,4 @@
-# Implementation status · 2026-10-29
+# Implementation status · 2026-10-30
 
 This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNCTIONAL_SPEC.md) remains the product target.
 
@@ -11,7 +11,7 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 | Reminders | Periodic JobScheduler check, at most one notification per goal per local date, only after notification permission. APK compiles; actual threshold delivery and reboot persistence remain unverified. | Not implemented. |
 | Insight controls | In-app week-range fact, 30-day suppression, global switch; never changes a user goal. | Demo only. |
 | Appearance | Three shared Flutter palettes plus follow-system mode, local preference persistence, themed charts and semantic warning colors. | Shared demo UI uses the same appearance picker; native report UI is not built yet. |
-| Visual hierarchy | Today uses one primary duration card, a separate time chart, quieter section typography and reduced-motion-aware chart selection. Trends and Goals now use concise summaries and named groups; platform launcher icons share the updated Chronos mark. Unavailable hourly data stays explicitly labeled. | Shared demo UI and app icon receive the same visual system; native iOS data is still unavailable. |
+| Visual hierarchy | Today uses one primary duration card, open chart sections, and reduced-motion-aware chart selection. Trends uses tonal hourly strips and a labeled average rule; app rankings use a neutral numbered ledger instead of arbitrary colors. Goals retains distinct summary and control groups. Platform launcher icons share the Chronos mark. Unavailable hourly data stays explicitly labeled. | Shared demo UI and app icon receive the same visual system; native iOS data is still unavailable. |
 | AI | No AI calls by design. The spec requires a separate privacy and feasibility decision before P3. | Same. |
 
 ## Android validation

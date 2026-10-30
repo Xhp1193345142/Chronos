@@ -1,7 +1,7 @@
 part of '../main.dart';
 
 Widget _page(List<Widget> children) => ListView(
-  padding: const EdgeInsets.fromLTRB(22, 17, 22, 38),
+  padding: const EdgeInsets.fromLTRB(24, 17, 24, 38),
   children: children,
 );
 
@@ -17,10 +17,19 @@ Widget _card(
   decoration: BoxDecoration(
     color: gradient == null ? color ?? chronosColors(context).surface : null,
     gradient: gradient,
-    borderRadius: BorderRadius.circular(23),
+    borderRadius: BorderRadius.circular(20),
     border: Border.all(
-      color: chronosColors(context).border.withValues(alpha: 0.74),
+      color: chronosColors(context).border.withValues(alpha: 0.55),
     ),
+  ),
+  child: child,
+);
+
+Widget _chartPanel(BuildContext context, Widget child) => Container(
+  width: double.infinity,
+  padding: const EdgeInsets.fromLTRB(2, 18, 2, 4),
+  decoration: BoxDecoration(
+    border: Border(top: BorderSide(color: chronosColors(context).border)),
   ),
   child: child,
 );
@@ -31,43 +40,38 @@ Widget _insight(
   Color color,
   String title,
   String body,
-) => _card(
-  context,
-  Row(
+) => Container(
+  width: double.infinity,
+  padding: const EdgeInsets.fromLTRB(15, 4, 2, 5),
+  decoration: BoxDecoration(
+    border: Border(left: BorderSide(color: color, width: 2)),
+  ),
+  child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.13),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(icon, color: color, size: 20),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+      Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
               title,
               style: TextStyle(
                 color: chronosColors(context).textPrimary,
                 fontSize: 13,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              body,
-              style: TextStyle(
-                color: chronosColors(context).textSecondary,
-                fontSize: 11.5,
-                height: 1.45,
-              ),
-            ),
-          ],
+          ),
+        ],
+      ),
+      const SizedBox(height: 7),
+      Text(
+        body,
+        style: TextStyle(
+          color: chronosColors(context).textSecondary,
+          fontSize: 11.5,
+          height: 1.45,
         ),
       ),
     ],
@@ -214,7 +218,7 @@ class _CategoryBreakdown extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const _Hint('彩色 = 今天 · 竖线 = 前三周同日平均'),
+      const _Hint('彩色线 = 今天 · 空心点 = 前三周同日平均'),
       const SizedBox(height: 18),
       ...DemoData.categories.asMap().entries.map((entry) {
         final item = entry.value;
@@ -285,35 +289,43 @@ class _ComparisonBar extends StatelessWidget {
       );
       final width = constraints.maxWidth;
       return SizedBox(
-        height: 13,
+        height: 15,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: chronosColors(context).border,
-                  borderRadius: BorderRadius.circular(7),
-                ),
-              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 7,
+              height: 1,
+              child: ColoredBox(color: chronosColors(context).border),
             ),
             Positioned(
               left: 0,
-              top: 2,
-              bottom: 2,
+              top: 5,
+              height: 5,
               width: width * item.minutes / scale,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(7),
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
             ),
             Positioned(
-              left: width * item.baselineMinutes / scale - 1,
-              top: 0,
-              bottom: 0,
-              width: 2,
-              child: ColoredBox(color: chronosColors(context).textPrimary),
+              left: width * item.baselineMinutes / scale - 3,
+              top: 4,
+              width: 7,
+              height: 7,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: chronosColors(context).surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: chronosColors(context).textPrimary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -342,13 +354,11 @@ class _WeekRhythm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _Hint('颜色越亮，使用越久'),
-        const SizedBox(height: 17),
         ...List.generate(7, (day) {
           final selected = day == selectedDay;
           final hours = DemoData.hourlyForDay(day);
           return Padding(
-            padding: const EdgeInsets.only(bottom: 7),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Semantics(
               button: true,
               selected: selected,
@@ -357,25 +367,28 @@ class _WeekRhythm extends StatelessWidget {
               child: InkWell(
                 key: Key('week-day-$day'),
                 onTap: () => onSelect(day),
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(5),
                 child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 39,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
                   decoration: BoxDecoration(
                     color: selected
-                        ? chronosColors(context).surfaceRaised
+                        ? chronosColors(context).accent.withValues(alpha: 0.08)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: selected
-                          ? chronosColors(context).border
-                          : Colors.transparent,
-                    ),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                   child: Row(
                     children: [
+                      Container(
+                        width: 2,
+                        height: 20,
+                        color: selected
+                            ? chronosColors(context).accent
+                            : Colors.transparent,
+                      ),
+                      const SizedBox(width: 5),
                       SizedBox(
-                        width: 17,
+                        width: 18,
                         child: Text(
                           DemoData.weekdays[day],
                           style: TextStyle(
@@ -387,9 +400,9 @@ class _WeekRhythm extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 5),
                       Expanded(child: _IntensityStrip(hours: hours)),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 9),
                       SizedBox(
                         width: 55,
                         child: Text(
@@ -414,7 +427,7 @@ class _WeekRhythm extends StatelessWidget {
           );
         }),
         const Padding(
-          padding: EdgeInsets.only(left: 32, right: 63, top: 2),
+          padding: EdgeInsets.only(left: 36, right: 64, top: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -451,12 +464,12 @@ class _IntensityStrip extends StatelessWidget {
       24,
       (hour) => Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0.7),
+          padding: const EdgeInsets.symmetric(horizontal: 0.8),
           child: Container(
-            height: 17,
+            height: 15,
             decoration: BoxDecoration(
               color: _usageColor(context, hours[hour]),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(1),
             ),
           ),
         ),
@@ -499,51 +512,69 @@ class _WeeklyBars extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 13),
+        const SizedBox(height: 14),
+        const _Hint('细线为七天平均 · 点按柱形查看日期'),
+        const SizedBox(height: 10),
         SizedBox(
           height: 128,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(7, (day) {
-              final selected = day == selectedDay;
-              final minutes = DemoData.week[day];
-              return Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: selected,
-                  label: '周${DemoData.weekdays[day]}，${formatMinutes(minutes)}',
-                  child: InkWell(
-                    onTap: () => onSelect(day),
-                    borderRadius: BorderRadius.circular(7),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 27,
-                          height: minutes / 420 * 99,
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? chronosColors(context).accent
-                                : chronosColors(context).usageLow,
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          DemoData.weekdays[day],
-                          style: TextStyle(
-                            color: selected
-                                ? chronosColors(context).accent
-                                : chronosColors(context).textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 22 + DemoData.weekAverageMinutes / 420 * 99,
+                child: Container(
+                  height: 1,
+                  color: chronosColors(context).textSecondary
+                      .withValues(alpha: 0.58),
                 ),
-              );
-            }),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(7, (day) {
+                  final selected = day == selectedDay;
+                  final minutes = DemoData.week[day];
+                  return Expanded(
+                    child: Semantics(
+                      button: true,
+                      selected: selected,
+                      label:
+                          '周${DemoData.weekdays[day]}，${formatMinutes(minutes)}',
+                      child: InkWell(
+                        onTap: () => onSelect(day),
+                        borderRadius: BorderRadius.circular(7),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              width: 18,
+                              height: minutes / 420 * 99,
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? chronosColors(context).accent
+                                    : chronosColors(context).accent
+                                          .withValues(alpha: 0.26),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              DemoData.weekdays[day],
+                              style: TextStyle(
+                                color: selected
+                                    ? chronosColors(context).accent
+                                    : chronosColors(context).textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           ),
         ),
       ],
@@ -745,28 +776,24 @@ class _Section extends StatelessWidget {
   final String title;
   final String subtitle;
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Flexible(
-        child: Text(
-          title,
-          style: TextStyle(
-            color: chronosColors(context).textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+      Text(
+        title,
+        style: TextStyle(
+          color: chronosColors(context).textPrimary,
+          fontSize: 19,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
         ),
       ),
-      const SizedBox(width: 12),
-      Flexible(
-        child: Text(
-          subtitle,
-          textAlign: TextAlign.end,
-          style: TextStyle(
-            color: chronosColors(context).textSecondary,
-            fontSize: 11.5,
-          ),
+      const SizedBox(height: 4),
+      Text(
+        subtitle,
+        style: TextStyle(
+          color: chronosColors(context).textSecondary,
+          fontSize: 11,
         ),
       ),
     ],
