@@ -1,7 +1,9 @@
 part of '../main.dart';
 
 class _LiveExperience extends StatefulWidget {
-  const _LiveExperience();
+  const _LiveExperience({required this.timer});
+
+  final ManualTimerController timer;
 
   @override
   State<_LiveExperience> createState() => _LiveExperienceState();
@@ -110,12 +112,30 @@ class _LiveExperienceState extends State<_LiveExperience>
 
   @override
   Widget build(BuildContext context) {
-    if (_demo) return ChronosHome(onExitDemo: _exitDemo);
+    if (_demo) return ChronosHome(timer: widget.timer, onExitDemo: _exitDemo);
     if (_loading) {
       return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(
-            color: chronosColors(context).accent,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 610),
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const _Heading('今天'),
+                  const SizedBox(height: 18),
+                  _TimerHero(timer: widget.timer),
+                  const SizedBox(height: 30),
+                  Center(
+                    child: CircularProgressIndicator(
+                      color: chronosColors(context).accent,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Center(child: _Hint('正在读取设备使用时间')),
+                ],
+              ),
+            ),
           ),
         ),
       );
@@ -182,64 +202,78 @@ class _LiveExperienceState extends State<_LiveExperience>
     body: SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.access_time_filled_rounded,
-                  color: chronosColors(context).accent,
-                  size: 46,
-                ),
-                const SizedBox(height: 28),
-                _Heading(title),
-                const SizedBox(height: 12),
-                Text(
-                  body,
-                  style: TextStyle(
-                    color: chronosColors(context).textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 26),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: onPrimary,
-                    child: Text(primary),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      _refreshVersion++;
-                      setState(() => _demo = true);
-                    },
-                    child: const Text('先看演示数据'),
-                  ),
-                ),
-                if (secondary != null)
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: onSecondary,
-                      child: Text(secondary),
+          constraints: const BoxConstraints(maxWidth: 610),
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              const _Eyebrow('本机手动计时'),
+              const SizedBox(height: 7),
+              const _Heading('今天'),
+              const SizedBox(height: 18),
+              _TimerHero(timer: widget.timer),
+              const SizedBox(height: 24),
+              _ManualToday(timer: widget.timer),
+              const SizedBox(height: 30),
+              const _Section('屏幕使用时间', '连接设备后显示'),
+              const SizedBox(height: 12),
+              _card(
+                context,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.access_time_filled_rounded,
+                      color: chronosColors(context).accent,
+                      size: 46,
                     ),
-                  ),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: _showSettings,
-                    child: const Text('设置与本地数据'),
-                  ),
+                    const SizedBox(height: 28),
+                    _Heading(title),
+                    const SizedBox(height: 12),
+                    Text(
+                      body,
+                      style: TextStyle(
+                        color: chronosColors(context).textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 26),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: onPrimary,
+                        child: Text(primary),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          _refreshVersion++;
+                          setState(() => _demo = true);
+                        },
+                        child: const Text('先看演示数据'),
+                      ),
+                    ),
+                    if (secondary != null)
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: onSecondary,
+                          child: Text(secondary),
+                        ),
+                      ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _showSettings,
+                        child: const Text('设置与本地数据'),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -314,6 +348,12 @@ class _LiveExperienceState extends State<_LiveExperience>
           constraints: const BoxConstraints(maxWidth: 610),
           child: _Nav(
             tab: _tab,
+            timer: widget.timer,
+            onTimerOpen: () => _showManualEntryEditor(
+              context,
+              widget.timer,
+              entry: widget.timer.active,
+            ),
             onTap: (value) => setState(() => _tab = value),
           ),
         ),
@@ -328,7 +368,13 @@ class _LiveExperienceState extends State<_LiveExperience>
       return _page([
         const _Eyebrow('今日'),
         const SizedBox(height: 8),
-        const _Heading('还没有可展示的使用记录'),
+        const _Heading('今天'),
+        const SizedBox(height: 18),
+        _TimerHero(timer: widget.timer),
+        const SizedBox(height: 25),
+        _ManualToday(timer: widget.timer),
+        const SizedBox(height: 29),
+        const _Section('屏幕使用时间', '尚无可展示的设备记录'),
         const SizedBox(height: 14),
         _card(
           context,
@@ -352,8 +398,14 @@ class _LiveExperienceState extends State<_LiveExperience>
       const SizedBox(height: 7),
       const _Heading('今天'),
       const SizedBox(height: 4),
-      _Hint('最近读取 ${_clock(snapshot.readAt)} · 应用前台时长合计'),
-      const SizedBox(height: 23),
+      const _Hint('手动记录与屏幕使用分别查看'),
+      const SizedBox(height: 19),
+      _TimerHero(timer: widget.timer),
+      const SizedBox(height: 25),
+      _ManualToday(timer: widget.timer),
+      const SizedBox(height: 29),
+      _Section('屏幕使用时间', '最近读取 ${_clock(snapshot.readAt)} · 不与手动记录相加'),
+      const SizedBox(height: 12),
       _card(
         context,
         Column(
@@ -477,6 +529,8 @@ class _LiveExperienceState extends State<_LiveExperience>
     final days = _snapshot!.days;
     if (days.isEmpty) {
       return _page([
+        _ManualWeek(timer: widget.timer),
+        const SizedBox(height: 27),
         const _Eyebrow('最近七天的屏幕节奏'),
         const SizedBox(height: 8),
         const _Heading('还没有可展示的趋势'),
@@ -511,11 +565,15 @@ class _LiveExperienceState extends State<_LiveExperience>
         .take(3)
         .toList();
     return _page([
-      const _Eyebrow('最近七天 · 设备数据'),
+      const _Eyebrow('最近七天'),
       const SizedBox(height: 7),
       const _Heading('趋势'),
       const SizedBox(height: 4),
-      const _Hint('今天仍在进行中；无数据日期不参与排名'),
+      const _Hint('手动记录与屏幕使用分别统计；无数据日期不参与排名'),
+      const SizedBox(height: 23),
+      _ManualWeek(timer: widget.timer),
+      const SizedBox(height: 27),
+      const _Section('屏幕使用趋势', '设备使用数据 · 与手动记录分别统计'),
       if (maxDay != null && minDay != null && complete.length >= 2) ...[
         const SizedBox(height: 23),
         _card(
@@ -970,7 +1028,7 @@ class _LiveExperienceState extends State<_LiveExperience>
                 const _Heading('设置与数据'),
                 const SizedBox(height: 13),
                 Text(
-                  '设备使用数据只在本机展示。目标设置保存在本机，不上传到服务器。',
+                  '设备使用数据只在本机展示。手动记录、目标与偏好保存在本机，不上传到服务器。',
                   style: TextStyle(
                     color: chronosColors(context).textSecondary,
                     height: 1.5,
@@ -1027,7 +1085,7 @@ class _LiveExperienceState extends State<_LiveExperience>
                   ),
                 ListTile(
                   title: Text(
-                    '删除本地目标与偏好',
+                    '删除本地记录、目标与偏好',
                     style: TextStyle(color: chronosColors(context).danger),
                   ),
                   onTap: () async {
@@ -1038,7 +1096,7 @@ class _LiveExperienceState extends State<_LiveExperience>
                       builder: (dialogContext) => AlertDialog(
                         title: const Text('删除本地数据？'),
                         content: const Text(
-                          '将删除 Chronos 保存的目标、提醒记录与洞察偏好，外观恢复为跟随系统。系统使用时间由设备管理，不会被删除。',
+                          '将删除手动计时记录、目标、提醒记录与洞察偏好，外观恢复为跟随系统。系统使用时间由设备管理，不会被删除。',
                         ),
                         actions: [
                           TextButton(
@@ -1054,6 +1112,10 @@ class _LiveExperienceState extends State<_LiveExperience>
                       ),
                     );
                     if (confirmed == true) {
+                      if (!await widget.timer.clear()) {
+                        if (mounted) _message(widget.timer.error ?? '手动记录删除失败');
+                        return;
+                      }
                       await _bridge.deleteLocalData();
                       resetAppearance();
                       if (sheetContext.mounted) Navigator.pop(sheetContext);

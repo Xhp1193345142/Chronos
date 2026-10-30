@@ -4,6 +4,7 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 
 | Area | Android | iOS |
 | --- | --- | --- |
+| Manual timer | Shared Flutter one-tap timer, pause/resume/stop, categories, notes, backfill/edit/delete, daily strip and seven-day total; persists locally and restores after restart. Works without usage permission. Web demo uses local browser storage. | Shared Flutter UI and local timer code are present; not tested on an iPhone. |
 | Permission and data state | Usage access gateway, refresh after returning from settings, denied/empty/partial states; tested on one Android 13 device. | Native Family Controls bridge and entitlement are not configured. The app offers a clearly labeled demo after showing an unavailable state. |
 | Today | Real app foreground totals and ranked apps. Hourly bars appear only when event-derived and aggregate durations agree. | Demo only. Protected report charts must be built in a Device Activity Report extension. |
 | Trends | Seven daily totals, date selection, app detail, seven-day hourly strip when events are reliable, completed-day baseline, 30-day heatmap, evidence-linked fact card and a review of trustworthy completed days. Unreliable dates are excluded from ranking and baselines. | Demo only. |
@@ -20,7 +21,7 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 - The device returned some historical app durations close to 24 hours. The reader now checks app foreground totals against Android screen-interactive event totals; inconsistent dates display as unavailable and do not affect insights. This is a conservative quality gate, not a substitute for comparing figures with the device's system Screen Time report.
 - Goal editor appearance and app selection list were inspected on the physical device. Two disabled temporary goals were saved and shown separately, then deleted. Notification permission was not requested; background threshold delivery, timezone changes, and reboot persistence remain unverified.
 - The appearance picker, all three palettes, and follow-system restoration were inspected on the Android 13 physical device.
-- `dart format .`, `flutter analyze`, `flutter test` (12 tests), `flutter build apk --debug`, and `flutter build web` passed for this change. See the latest `dev` CI result for the pushed commit.
+- `dart format .`, `flutter analyze`, `flutter test` (18 tests), `flutter build apk --debug`, and `flutter build web` passed for the manual-timer change. The updated APK was not installed over the existing app because its debug signature differs; the new timer remains unverified on a physical device. See the latest `dev` CI result for the pushed commit.
 
 ## Outstanding work before a cross-platform release
 

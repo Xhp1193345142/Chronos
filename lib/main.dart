@@ -7,10 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'chronos_theme.dart';
 import 'demo_data.dart';
+import 'manual_timer.dart';
 
 part 'src/chronos_shell.dart';
 part 'src/live_data.dart';
 part 'src/live_shell.dart';
+part 'src/manual_timer_ui.dart';
 part 'src/visuals.dart';
 
 void main() {
@@ -29,13 +31,21 @@ class ChronosApp extends StatefulWidget {
 
 class _ChronosAppState extends State<ChronosApp> {
   static const _preferenceKey = 'chronos_theme';
+  final ManualTimerController _manualTimer = ManualTimerController();
   ChronosThemeChoice _choice = ChronosThemeChoice.system;
   bool _changedByUser = false;
 
   @override
   void initState() {
     super.initState();
+    _manualTimer.load();
     _loadChoice();
+  }
+
+  @override
+  void dispose() {
+    _manualTimer.dispose();
+    super.dispose();
   }
 
   Future<void> _loadChoice() async {
@@ -120,8 +130,8 @@ class _ChronosAppState extends State<ChronosApp> {
           );
         },
         home: widget.demoOnly || kIsWeb
-            ? const ChronosHome()
-            : const _LiveExperience(),
+            ? ChronosHome(timer: _manualTimer)
+            : _LiveExperience(timer: _manualTimer),
       ),
     );
   }

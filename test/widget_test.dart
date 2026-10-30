@@ -2,8 +2,12 @@ import 'package:chronos/demo_data.dart';
 import 'package:chronos/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   test('formatMinutes handles minutes and whole hours', () {
     expect(formatMinutes(22), '22 分钟');
     expect(formatMinutes(120), '2 小时');
@@ -31,6 +35,8 @@ void main() {
   ) async {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(find.text('演示数据'), findsOneWidget);
+    expect(find.byKey(const Key('timer-start')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('今天少用 42 分钟'), 200);
     expect(find.text('今天少用 42 分钟'), findsOneWidget);
     expect(find.byKey(const Key('today-duration')), findsOneWidget);
 
@@ -40,13 +46,33 @@ void main() {
     expect(find.byType(Slider), findsOneWidget);
   });
 
+  testWidgets('opening the app and tapping once starts a local timer', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ChronosApp(demoOnly: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timer-start')));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('正在计时'), findsOneWidget);
+    expect(find.byKey(const Key('timer-elapsed')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.tap(find.byKey(const Key('timer-pause-resume')));
+    await tester.pump();
+    expect(find.text('已暂停'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('timer-stop')));
+    await tester.pump();
+    expect(find.byKey(const Key('timer-start')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('1 段'), 200);
+    expect(find.text('1 段'), findsOneWidget);
+  });
+
   testWidgets('selecting a day updates both trend charts', (tester) async {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('周一最多，周二最少'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('week-day-0')));
+    await tester.scrollUntilVisible(find.byKey(const Key('week-day-0')), 200);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('week-day-0')));
     await tester.pumpAndSettle();
@@ -69,6 +95,9 @@ void main() {
 
     await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(find.byKey(const Key('hour-15')), 200);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('hour-15')));
     await tester.pumpAndSettle();
     expect(find.text('15:00–16:00  ·  34 分钟'), findsOneWidget);

@@ -1,6 +1,6 @@
 # Chronos development rules
 
-Read `README.md` and the relevant file in `docs/` before changing code. The product is a privacy-conscious screen-time app for iOS and Android. Flutter owns shared UI; platform APIs stay behind platform-specific adapters.
+Read `README.md` and the relevant file in `docs/` before changing code. The product is a privacy-conscious personal time app for iOS and Android. Flutter owns shared UI and manual timing; platform screen-time APIs stay behind platform-specific adapters.
 
 ## Git and collaboration
 
@@ -13,6 +13,7 @@ Read `README.md` and the relevant file in `docs/` before changing code. The prod
 
 - Follow `docs/PRODUCT.md` and `docs/FUNCTIONAL_SPEC.md` for scope and feature behavior, `docs/ARCHITECTURE.md` for data boundaries, and `docs/DESIGN.md` for UI behavior.
 - The demo uses explicitly labeled sample data. Do not present it as live device usage or silently substitute sample data after a permission failure.
+- Manual timer entries are genuine local user records, available without screen-time permission. Keep them clearly separate from device or demo usage data; never add potentially overlapping durations into one total.
 - Keep iOS Screen Time data inside Apple's permitted surfaces. Do not attempt to extract report-extension data or send it to an AI service.
 - Store usage-related data locally by default. Do not add analytics, accounts, a backend, AI calls, or third-party tracking without a specific product decision.
 - Never commit secrets, signing files, or personal device data.

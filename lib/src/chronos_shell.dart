@@ -1,8 +1,9 @@
 part of '../main.dart';
 
 class ChronosHome extends StatefulWidget {
-  const ChronosHome({super.key, this.onExitDemo});
+  const ChronosHome({super.key, required this.timer, this.onExitDemo});
 
+  final ManualTimerController timer;
   final VoidCallback? onExitDemo;
 
   @override
@@ -46,6 +47,12 @@ class _ChronosHomeState extends State<ChronosHome> {
           constraints: const BoxConstraints(maxWidth: 610),
           child: _Nav(
             tab: tab,
+            timer: widget.timer,
+            onTimerOpen: () => _showManualEntryEditor(
+              context,
+              widget.timer,
+              entry: widget.timer.active,
+            ),
             onTap: (value) {
               HapticFeedback.selectionClick();
               setState(() => tab = value);
@@ -60,12 +67,16 @@ class _ChronosHomeState extends State<ChronosHome> {
     final change = DemoData.lastWeekSameDayMinutes - DemoData.todayMinutes;
     final topCategory = DemoData.categories.first;
     return _page([
-      const _Eyebrow('星期四 · 10月29日'),
+      _Eyebrow('本机今日 · ${_manualDate(DateTime.now())}'),
       const SizedBox(height: 7),
       const _Heading('今天'),
-      const SizedBox(height: 4),
-      const _Hint('应用与时段 · 以下为演示数据'),
-      const SizedBox(height: 23),
+      const SizedBox(height: 19),
+      _TimerHero(timer: widget.timer, demo: true),
+      const SizedBox(height: 25),
+      _ManualToday(timer: widget.timer),
+      const SizedBox(height: 29),
+      const _Section('屏幕使用演示', '10月29日的固定样例 · 非设备数据'),
+      const SizedBox(height: 12),
       _card(
         context,
         Column(
@@ -192,12 +203,16 @@ class _ChronosHomeState extends State<ChronosHome> {
     final maxDay = DemoData.week.indexOf(maxMinutes);
     final minDay = DemoData.week.indexOf(minMinutes);
     return _page([
-      const _Eyebrow('最近七天 · 演示数据'),
+      const _Eyebrow('最近七天'),
       const SizedBox(height: 7),
       const _Heading('趋势'),
       const SizedBox(height: 4),
-      const _Hint('选择一天，查看它的使用节奏'),
+      const _Hint('手动记录与屏幕使用分别统计'),
       const SizedBox(height: 23),
+      _ManualWeek(timer: widget.timer),
+      const SizedBox(height: 29),
+      const _Section('屏幕使用演示', '以下图表为固定样例'),
+      const SizedBox(height: 12),
       _card(
         context,
         Column(

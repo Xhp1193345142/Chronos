@@ -4,18 +4,19 @@ For screen-by-screen behavior, rule definitions, platform fallbacks, and accepta
 
 ## Purpose
 
-Chronos helps people understand where their screen time goes and act on goals they choose. Its value is a clear visual account of time and reminders the user can adjust.
+Chronos helps people understand where their time goes. A one-tap manual timer records offline activities; platform screen-time reports show phone use as a separate source. Its value is a clear visual account of time and reminders the user can adjust.
 
 ## First real release
 
-1. Explain and request access to system app-usage data.
-2. Show daily and weekly usage with a clear total, app or category breakdown, and comparison to a previous period where supported.
-3. Let the user select apps, set a daily combined time limit, and adjust or pause the reminder.
-4. Display permission, loading, empty, and unavailable states honestly.
+1. Put one-tap manual timing on the first screen, independent of screen-time permission; allow pause, resume, stop, category, notes, backfill, edit, delete, and local recovery.
+2. Explain and request access to system app-usage data separately.
+3. Show daily and weekly manual records and screen usage as distinct measures; never add overlapping durations into one total.
+4. Let the user select apps, set a daily combined time limit, and adjust or pause the reminder.
+5. Display permission, loading, empty, and unavailable states honestly.
 
 ## Demo scope
 
-The first demo is a polished Flutter interface using fixed sample data. It demonstrates the home dashboard, a 24-hour screen-use rhythm, category comparisons against sample baselines, seven-day rhythms, goals, and chart interaction. The demo's seven days end on Thursday, October 29. It does not read real screen time, trigger a system notification, use AI, or upload data.
+The Web demo keeps fixed, labeled screen-use samples ending Thursday, October 29. Manual timer entries are real local browser records, clearly labeled separately. The demo does not read real screen time, trigger a system notification, use AI, or upload data.
 
 ## Later possibilities
 
@@ -30,5 +31,6 @@ Health or sleep diagnosis, automatic behavioral judgment, forced app blocking, h
 ## Acceptance for the demo
 
 - A user can identify today's total, the largest time category, the busiest three-hour period, and how usage compares with a baseline without reading a paragraph.
+- A user can open the app and start a manual timer with one tap, even before granting device-usage access.
 - A user can tap an hour or day to inspect the chart, compare the last seven days, and adjust the sample goal.
 - Sample data is visibly labeled. UI remains usable on narrow phones and with larger text.

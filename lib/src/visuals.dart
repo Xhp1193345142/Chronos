@@ -663,10 +663,17 @@ class _Header extends StatelessWidget {
 }
 
 class _Nav extends StatelessWidget {
-  const _Nav({required this.tab, required this.onTap});
+  const _Nav({
+    required this.tab,
+    required this.onTap,
+    required this.timer,
+    required this.onTimerOpen,
+  });
 
   final int tab;
   final ValueChanged<int> onTap;
+  final ManualTimerController timer;
+  final VoidCallback onTimerOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -688,41 +695,46 @@ class _Nav extends StatelessWidget {
         border: Border(top: BorderSide(color: chronosColors(context).border)),
       ),
       child: Row(
-        children: List.generate(3, (index) {
-          final active = tab == index;
-          return Expanded(
-            child: Semantics(
-              button: true,
-              selected: active,
-              child: InkWell(
-                onTap: () => onTap(index),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      active ? activeIcons[index] : icons[index],
-                      color: active
-                          ? chronosColors(context).accent
-                          : chronosColors(context).textSecondary,
-                      size: 21,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      labels[index],
-                      style: TextStyle(
+        children: [
+          ...List.generate(3, (index) {
+            final active = tab == index;
+            return Expanded(
+              child: Semantics(
+                button: true,
+                selected: active,
+                child: InkWell(
+                  onTap: () => onTap(index),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        active ? activeIcons[index] : icons[index],
                         color: active
                             ? chronosColors(context).accent
                             : chronosColors(context).textSecondary,
-                        fontSize: 11,
-                        fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                        size: 21,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        labels[index],
+                        style: TextStyle(
+                          color: active
+                              ? chronosColors(context).accent
+                              : chronosColors(context).textSecondary,
+                          fontSize: 11,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+          _TimerDockAction(timer: timer, onOpen: onTimerOpen),
+        ],
       ),
     );
   }

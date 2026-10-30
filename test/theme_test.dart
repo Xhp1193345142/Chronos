@@ -16,12 +16,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('趋势').last);
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('七天节奏'), 200);
       expect(find.text('七天节奏'), findsOneWidget);
 
       await tester.tap(find.byTooltip('切换主题'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('晨雾纸感'));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('七天节奏'), 200);
       expect(find.text('七天节奏'), findsOneWidget);
       expect(
         chronosColors(tester.element(find.byType(Scaffold).first)).background,

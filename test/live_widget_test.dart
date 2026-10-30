@@ -2,10 +2,13 @@ import 'package:chronos/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('chronos/native');
+
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -33,9 +36,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('连接设备使用时间'), findsOneWidget);
     expect(find.byKey(const Key('live-today-total')), findsNothing);
+    expect(find.byKey(const Key('timer-start')), findsOneWidget);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('先看演示数据'));
     await tester.pumpAndSettle();
     expect(find.text('演示数据'), findsOneWidget);
+  });
+
+  testWidgets('manual timing starts from the denied-permission screen', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': false, 'notificationsGranted': false};
+            case 'getGoals':
+              return [];
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timer-start')));
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('正在计时'), findsOneWidget);
+    expect(find.byKey(const Key('live-today-total')), findsNothing);
+    await tester.tap(find.byKey(const Key('timer-stop')));
+    await tester.pump();
   });
 
   testWidgets('partial days show missing data instead of a zero-duration bar', (
@@ -92,6 +125,10 @@ void main() {
 
     await tester.pumpWidget(const ChronosApp());
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('live-today-total')),
+      200,
+    );
     expect(find.byKey(const Key('live-today-total')), findsOneWidget);
     await tester.scrollUntilVisible(find.text('视频'), 200);
     await tester.drag(find.byType(ListView).first, const Offset(0, -200));
@@ -104,6 +141,7 @@ void main() {
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
     expect(find.textContaining('无数据'), findsWidgets);
+    await tester.scrollUntilVisible(find.text('完整日期的最大差异'), 250);
     expect(find.text('完整日期的最大差异'), findsOneWidget);
     expect(find.text('10 分钟'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -140,10 +178,15 @@ void main() {
 
     await tester.pumpWidget(const ChronosApp());
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('live-today-total')),
+      200,
+    );
     expect(find.byKey(const Key('live-today-total')), findsOneWidget);
     granted = false;
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('使用权限已关闭'), 200);
     expect(find.text('使用权限已关闭'), findsOneWidget);
     expect(find.byKey(const Key('live-today-total')), findsNothing);
   });

@@ -2,11 +2,11 @@
 
 ## Direction
 
-Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a specific, checkable observation, then show the chart that supports it. The visual hierarchy is: current total with its reference, when usage happened, category comparison, then a user-set goal. Use generous spacing and a small number of strong colors.
+Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a one-tap manual timer, then show specific, checkable observations and supporting charts. Manual time and phone usage are separate measures. Use generous spacing and a small number of strong colors.
 
 ## Interface craft
 
-Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, the largest type belongs to the real or clearly labeled sample total; a compact comparison sits beside that number, followed by one dominant time chart and then the ranked destinations. On Trends, a single summary precedes the seven-day rhythm and daily totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
+Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, a prominent timer starts immediately without a category prompt, followed by the local activity ledger and then device screen use or clearly labeled sample charts. A persistent dock action starts the timer from other tabs; while active it opens its controls. On Trends, manual activity and screen-use rhythms have distinct headings and totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
 
 Use the platform's system font, tabular figures for large durations, restrained weights, aligned edges and consistent section spacing. Summary and control surfaces use a 20-point corner radius and subtle borders. Data charts sit on the page with a fine top rule instead of being enclosed in repeated cards. Reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
 
@@ -28,8 +28,8 @@ Use quiet surfaces, subtle separators, and a consistent 8-point spacing scale. L
 
 ## Primary screens
 
-- **Today:** one large screen-time total with a factual comparison and category ring, a tappable 24-hour activity chart when the hourly data is trustworthy, category bars with previous three same weekdays as the baseline, and a goal progress card. When hourly data is unavailable, show a compact explanation and keep the app ranking available.
-- **Trends:** a concise seven-day summary, one hourly intensity strip per day, selectable daily totals, a weekly average, and a short factual comparison. The summary uses completed days only when device data is incomplete.
+- **Today:** one-tap start, active elapsed time with pause and stop, a local activity strip and editable entries. Screen-time totals, hourly charts, category comparisons and goals follow as separate data.
+- **Trends:** a seven-day manual-record chart followed by separately labeled screen-use trends. The screen summary uses completed days only when device data is incomplete.
 - **Goals:** a short title, selected-app limits, progress, reminder preference, and edit controls grouped by task.
 
 ## Interaction and state rules
