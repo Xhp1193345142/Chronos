@@ -223,6 +223,17 @@ ThemeData chronosThemeData(ChronosPalette palette, Brightness brightness) {
       overlayColor: palette.accent.withValues(alpha: 0.12),
     ),
     bottomSheetTheme: BottomSheetThemeData(backgroundColor: palette.surface),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: palette.accent),
     ),

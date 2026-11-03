@@ -43,6 +43,7 @@ void main() {
     await tester.tap(find.text('目标').last);
     await tester.pumpAndSettle();
     expect(find.text('提醒只针对你设置的上限。'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byType(Slider), 200);
     expect(find.byType(Slider), findsOneWidget);
   });
 

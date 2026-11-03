@@ -17,9 +17,9 @@ Widget _card(
   decoration: BoxDecoration(
     color: gradient == null ? color ?? chronosColors(context).surface : null,
     gradient: gradient,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(18),
     border: Border.all(
-      color: chronosColors(context).border.withValues(alpha: 0.55),
+      color: chronosColors(context).border.withValues(alpha: 0.42),
     ),
   ),
   child: child,
@@ -543,30 +543,16 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(23, 17, 20, 11),
+    padding: const EdgeInsets.fromLTRB(24, 20, 19, 9),
     child: Row(
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: chronosColors(context).accent.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: Icon(
-            Icons.access_time_rounded,
-            color: chronosColors(context).accent,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
         Text(
-          'Chronos',
+          'CHRONOS',
           style: TextStyle(
             color: chronosColors(context).textPrimary,
-            fontSize: 16,
-            letterSpacing: -0.2,
-            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            letterSpacing: 2.1,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const Spacer(),
@@ -578,38 +564,14 @@ class _Header extends StatelessWidget {
             color: chronosColors(context).textSecondary,
           ),
         ),
-        InkWell(
-          onTap: onExitDemo,
-          borderRadius: BorderRadius.circular(100),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: chronosColors(context).accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(
-                color: chronosColors(context).accent.withValues(alpha: 0.27),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 6,
-                  color: chronosColors(context).accent,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  '演示数据',
-                  style: TextStyle(
-                    color: chronosColors(context).accent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+        TextButton(
+          onPressed: onExitDemo,
+          style: TextButton.styleFrom(
+            foregroundColor: chronosColors(context).textSecondary,
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 7),
           ),
+          child: const Text('演示数据', style: TextStyle(fontSize: 11)),
         ),
       ],
     ),
@@ -643,7 +605,7 @@ class _Nav extends StatelessWidget {
     ];
     const labels = ['今日', '趋势', '目标'];
     return Container(
-      height: 70,
+      height: 69,
       decoration: BoxDecoration(
         color: chronosColors(context).surface,
         border: Border(top: BorderSide(color: chronosColors(context).border)),
@@ -668,7 +630,7 @@ class _Nav extends StatelessWidget {
                             : chronosColors(context).textSecondary,
                         size: 21,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       Text(
                         labels[index],
                         style: TextStyle(
@@ -677,8 +639,8 @@ class _Nav extends StatelessWidget {
                               : chronosColors(context).textSecondary,
                           fontSize: 11,
                           fontWeight: active
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ],
@@ -702,8 +664,9 @@ class _Eyebrow extends StatelessWidget {
     text,
     style: TextStyle(
       color: chronosColors(context).textSecondary,
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.2,
     ),
   );
 }
@@ -716,9 +679,9 @@ class _Heading extends StatelessWidget {
     text,
     style: TextStyle(
       color: chronosColors(context).textPrimary,
-      fontSize: 31,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.8,
+      fontSize: 34,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -1.1,
     ),
   );
 }
@@ -750,8 +713,8 @@ class _Section extends StatelessWidget {
         style: TextStyle(
           color: chronosColors(context).textPrimary,
           fontSize: 19,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.4,
         ),
       ),
       const SizedBox(height: 4),

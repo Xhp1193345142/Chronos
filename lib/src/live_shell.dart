@@ -289,35 +289,27 @@ class _LiveExperienceState extends State<_LiveExperience>
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(23, 17, 15, 11),
+                padding: const EdgeInsets.fromLTRB(24, 20, 17, 9),
                 child: Row(
                   children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: chronosColors(context).accent
-                            .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: Icon(
-                        Icons.access_time_rounded,
-                        color: chronosColors(context).accent,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
                     Text(
-                      'Chronos',
+                      'CHRONOS',
                       style: TextStyle(
                         color: chronosColors(context).textPrimary,
-                        fontSize: 16,
-                        letterSpacing: -0.2,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        letterSpacing: 2.1,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const Spacer(),
-                    const _Badge('设备数据'),
+                    Text(
+                      '设备数据',
+                      style: TextStyle(
+                        color: chronosColors(context).textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
                     IconButton(
                       tooltip: '设置',
                       onPressed: _showSettings,
@@ -366,8 +358,9 @@ class _LiveExperienceState extends State<_LiveExperience>
     final today = snapshot.today;
     if (today == null || !today.available) {
       final unreliable = today?.reason == 'unreliable';
+      final now = DateTime.now();
       return _page([
-        const _Eyebrow('今日'),
+        _Eyebrow('星期${_weekday(now)} · ${now.month}月${now.day}日'),
         const SizedBox(height: 8),
         const _Heading('今天'),
         const SizedBox(height: 18),
@@ -379,18 +372,37 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 14),
         _card(
           context,
-          Text(
-            unreliable
-                ? '设备返回的应用时长与屏幕交互时长不一致，暂不展示今日总量。可稍后刷新，并对照系统使用时间报告。'
-                : '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
-            style: TextStyle(
-              color: chronosColors(context).textSecondary,
-              height: 1.5,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 21,
+                color: chronosColors(context).textSecondary,
+              ),
+              const SizedBox(height: 15),
+              Text(
+                unreliable
+                    ? '设备返回的应用时长与屏幕交互时长不一致，暂不展示今日总量。可稍后刷新，并对照系统使用时间报告。'
+                    : '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh_rounded, size: 17),
+                label: const Text('刷新设备数据'),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 36),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: _refresh, child: const Text('刷新')),
       ]);
     }
     final top = today.apps.isEmpty ? null : today.apps.first;
@@ -572,55 +584,12 @@ class _LiveExperienceState extends State<_LiveExperience>
       const SizedBox(height: 7),
       const _Heading('趋势'),
       const SizedBox(height: 4),
-      const _Hint('手动记录与屏幕使用分别统计；无数据日期不参与排名'),
+      const _Hint('本机计时与设备使用分开统计'),
       const SizedBox(height: 23),
       _ManualWeek(timer: widget.timer),
       const SizedBox(height: 27),
-      const _Section('屏幕使用趋势', '设备使用数据 · 与手动记录分别统计'),
-      if (maxDay != null && minDay != null && complete.length >= 2) ...[
-        const SizedBox(height: 23),
-        _card(
-          context,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '完整日期的最大差异',
-                style: TextStyle(
-                  color: chronosColors(context).textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 15),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  formatMinutes(maxDay.totalMinutes - minDay.totalMinutes),
-                  style: TextStyle(
-                    color: chronosColors(context).textPrimary,
-                    fontSize: 35,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1.2,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-              Divider(color: chronosColors(context).border, height: 34),
-              Text(
-                '${maxDay.date.month}月${maxDay.date.day}日最多 · ${minDay.date.month}月${minDay.date.day}日最少 · 样本 ${complete.length} 天',
-                style: TextStyle(
-                  color: chronosColors(context).textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-        ),
-      ],
-      const SizedBox(height: 27),
+      const _Section('屏幕使用趋势', '来自设备 · 仅比较完整日期'),
+      const SizedBox(height: 17),
       if (days.any((day) => day.hourly?.length == 24)) ...[
         _chartPanel(
           context,
@@ -640,6 +609,43 @@ class _LiveExperienceState extends State<_LiveExperience>
           onSelect: (value) => setState(() => _selectedDay = value),
         ),
       ),
+      if (maxDay != null && minDay != null && complete.length >= 2) ...[
+        const SizedBox(height: 22),
+        _chartPanel(
+          context,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '完整日期的最大差异',
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                formatMinutes(maxDay.totalMinutes - minDay.totalMinutes),
+                style: TextStyle(
+                  color: chronosColors(context).textPrimary,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.6,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${maxDay.date.month}月${maxDay.date.day}日最多 · ${minDay.date.month}月${minDay.date.day}日最少 · 样本 ${complete.length} 天',
+                style: TextStyle(
+                  color: chronosColors(context).textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
       const SizedBox(height: 15),
       _card(context, _LiveDayDetails(day: selectedDay)),
       if (selectedDay.complete && baselineSamples.length >= 2) ...[
@@ -1505,11 +1511,15 @@ class _SevenDayHourly extends StatelessWidget {
                   SizedBox(
                     width: 53,
                     child: Text(
-                      day.available ? formatMinutes(day.totalMinutes) : '无数据',
+                      day.available
+                          ? _compactChartMinutes(day.totalMinutes)
+                          : '无数据',
                       textAlign: TextAlign.right,
+                      maxLines: 1,
                       style: TextStyle(
                         color: chronosColors(context).textSecondary,
                         fontSize: 10,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
@@ -1555,7 +1565,7 @@ class _LiveDailyChart extends StatelessWidget {
       children: [
         const _CardTitle('每日累计', Icons.bar_chart_rounded),
         const SizedBox(height: 7),
-        const _Hint('点按日期查看 · 今天仍在进行中 · 细线表示已知日期日均'),
+        const _Hint('点按日期查看 · 无数据不计入日均 · 细线为已知日均'),
         const SizedBox(height: 16),
         Text(
           '${day.date.month}月${day.date.day}日 · ${day.available ? formatMinutes(day.totalMinutes) : '无数据'}${day.available && !day.complete ? '（进行中）' : ''}',
@@ -2141,6 +2151,9 @@ String _previewCopy(String tone, String name, int limit) {
 
 String _weekday(DateTime date) =>
     const ['一', '二', '三', '四', '五', '六', '日'][date.weekday - 1];
+String _compactChartMinutes(int minutes) => minutes < 60
+    ? '${minutes}m'
+    : '${minutes ~/ 60}h${(minutes % 60).toString().padLeft(2, '0')}';
 String _clock(DateTime? date) => date == null
     ? '未知'
     : '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';

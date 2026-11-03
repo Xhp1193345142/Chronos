@@ -41,70 +41,69 @@ class _TimerHero extends StatelessWidget {
       return Container(
         key: const Key('timer-hero'),
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(21, 19, 21, 21),
+        padding: const EdgeInsets.fromLTRB(21, 20, 21, 20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [palette.accent.withValues(alpha: 0.16), palette.surface],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: palette.accent.withValues(alpha: 0.24)),
+          color: palette.surface,
+          borderRadius: BorderRadius.circular(21),
+          border: Border.all(color: palette.border.withValues(alpha: 0.65)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: palette.accent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Text(
                   active == null
-                      ? '记录此刻'
+                      ? '手动计时'
                       : active.isRunning
                       ? '正在计时'
                       : '已暂停',
                   style: TextStyle(
-                    color: palette.accent,
+                    color: active == null
+                        ? palette.textSecondary
+                        : palette.accent,
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  demo ? '本机记录 · 非演示数据' : '本机手动记录',
+                  demo ? '本机记录 · 非演示' : '仅存本机',
                   style: TextStyle(color: palette.textSecondary, fontSize: 11),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 19),
             if (active == null) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '为此刻计时',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 27,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.9,
+                      ),
+                    ),
+                  ),
+                  _ChronosDial(color: palette.accent, track: palette.border),
+                ],
+              ),
+              const SizedBox(height: 4),
               Text(
-                '开始记录现在',
+                '记录你正在做的事，稍后也能补充分类。',
                 style: TextStyle(
-                  color: palette.textPrimary,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.6,
+                  color: palette.textSecondary,
+                  fontSize: 12,
+                  height: 1.4,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                '点击即开始，分类可以稍后再选。',
-                style: TextStyle(color: palette.textSecondary, fontSize: 12),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 53,
                 child: FilledButton.icon(
                   key: const Key('timer-start'),
                   onPressed: () => _start(context),
@@ -112,16 +111,10 @@ class _TimerHero extends StatelessWidget {
                   label: const Text('开始计时'),
                 ),
               ),
-              const SizedBox(height: 17),
-              Text(
-                '快捷开始',
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 17),
+                child: Divider(color: palette.border, height: 1),
               ),
-              const SizedBox(height: 8),
               Row(
                 children: [
                   for (final preset in const [
@@ -137,17 +130,21 @@ class _TimerHero extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 3,
-                            vertical: 11,
+                            vertical: 10,
                           ),
                           minimumSize: Size.zero,
                           visualDensity: VisualDensity.compact,
                           side: BorderSide(color: palette.border),
-                          backgroundColor: palette.surface.withValues(
-                            alpha: 0.7,
+                          backgroundColor: palette.surfaceRaised.withValues(
+                            alpha: 0.55,
                           ),
                           foregroundColor: palette.textPrimary,
                         ),
-                        icon: Icon(preset.$2, size: 15, color: palette.accent),
+                        icon: Icon(
+                          preset.$2,
+                          size: 15,
+                          color: palette.textSecondary,
+                        ),
                         label: Text(
                           preset.$1,
                           style: const TextStyle(fontSize: 11),
@@ -238,6 +235,75 @@ class _TimerHero extends StatelessWidget {
   );
 }
 
+class _ChronosDial extends StatelessWidget {
+  const _ChronosDial({required this.color, required this.track});
+
+  final Color color;
+  final Color track;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SizedBox(
+      width: 49,
+      height: 49,
+      child: CustomPaint(painter: _ChronosDialPainter(color, track)),
+    ),
+  );
+}
+
+class _ChronosDialPainter extends CustomPainter {
+  const _ChronosDialPainter(this.color, this.track);
+
+  final Color color;
+  final Color track;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide / 2 - 2;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi * 0.72,
+      math.pi * 1.82,
+      false,
+      Paint()
+        ..color = track
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..strokeCap = StrokeCap.round,
+    );
+    for (var tick = 0; tick < 12; tick++) {
+      final angle = tick * math.pi / 6 - math.pi / 2;
+      final outer =
+          center + Offset(math.cos(angle), math.sin(angle)) * (radius - 5);
+      final inner =
+          center +
+          Offset(math.cos(angle), math.sin(angle)) *
+              (radius - (tick % 3 == 0 ? 9 : 7));
+      canvas.drawLine(
+        inner,
+        outer,
+        Paint()
+          ..color = tick % 3 == 0 ? color : track
+          ..strokeWidth = tick % 3 == 0 ? 1.5 : 1,
+      );
+    }
+    canvas.drawLine(
+      center,
+      center + Offset(0, -(radius - 11)),
+      Paint()
+        ..color = color
+        ..strokeWidth = 1.7
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawCircle(center, 2.3, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ChronosDialPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.track != track;
+}
+
 class _TimerDockAction extends StatelessWidget {
   const _TimerDockAction({required this.timer, required this.onOpen});
 
@@ -250,41 +316,39 @@ class _TimerDockAction extends StatelessWidget {
     builder: (context, _) {
       final active = timer.active;
       return Padding(
-        padding: const EdgeInsets.fromLTRB(2, 9, 12, 9),
-        child: FilledButton(
-          key: const Key('timer-dock'),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-          ),
-          onPressed: () {
-            if (active == null) {
-              timer.start().then((started) {
-                if (!started && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(timer.error ?? '计时已在进行中')),
-                  );
-                }
-              });
-            } else {
-              onOpen();
-            }
-          },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
+        padding: const EdgeInsets.only(left: 8, right: 18),
+        child: Semantics(
+          button: true,
+          label: active == null ? '开始计时' : '打开正在进行的计时',
+          child: InkWell(
+            key: const Key('timer-dock'),
+            customBorder: const CircleBorder(),
+            onTap: () {
+              if (active == null) {
+                timer.start().then((started) {
+                  if (!started && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(timer.error ?? '计时已在进行中')),
+                    );
+                  }
+                });
+              } else {
+                onOpen();
+              }
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: chronosColors(context).accent,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
                 active == null ? Icons.add_rounded : Icons.timer_outlined,
-                size: 19,
+                color: chronosColors(context).background,
+                size: 25,
               ),
-              const SizedBox(height: 2),
-              Text(
-                active == null ? '计时' : '进行中',
-                style: const TextStyle(fontSize: 11),
-              ),
-            ],
+            ),
           ),
         ),
       );
@@ -318,6 +382,10 @@ class _ManualToday extends StatelessWidget {
                     builder: (_) => _ManualHistoryPage(timer: timer),
                   ),
                 ),
+                style: TextButton.styleFrom(
+                  foregroundColor: palette.textSecondary,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                ),
                 child: const Text('全部'),
               ),
               TextButton.icon(
@@ -325,6 +393,9 @@ class _ManualToday extends StatelessWidget {
                 onPressed: () => _showManualEntryEditor(context, timer),
                 icon: const Icon(Icons.add_rounded, size: 17),
                 label: const Text('补记'),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                ),
               ),
             ],
           ),
@@ -672,10 +743,71 @@ class _ManualWeek extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _Section('手动记录趋势', '近七天 · 与屏幕使用时间分别统计'),
+          const _Section('手动记录趋势', '近七天 · 本机记录'),
           const SizedBox(height: 12),
           if (total == Duration.zero)
             _chartPanel(context, const _Hint('还没有手动记录。开始计时后，这里会显示七天变化。'))
+          else if (total < const Duration(minutes: 1))
+            _chartPanel(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '七天共记录 ${_timerDuration(total)}',
+                    style: TextStyle(
+                      color: palette.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      for (var index = 0; index < 7; index++)
+                        Expanded(
+                          child: Semantics(
+                            label:
+                                '${_manualDate(days[index])} 手动记录 ${_timerDuration(durations[index])}',
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: durations[index] > Duration.zero
+                                      ? 12
+                                      : 2,
+                                  decoration: BoxDecoration(
+                                    color: durations[index] > Duration.zero
+                                        ? palette.accent
+                                        : palette.border,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _weekday(days[index]),
+                                  style: TextStyle(
+                                    color: palette.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                if (durations[index] > Duration.zero)
+                                  Text(
+                                    '${durations[index].inSeconds}s',
+                                    style: TextStyle(
+                                      color: palette.accent,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            )
           else
             _chartPanel(
               context,

@@ -182,6 +182,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('趋势').last);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.textContaining('无数据'), 250);
     expect(find.textContaining('无数据'), findsWidgets);
     await tester.scrollUntilVisible(find.text('完整日期的最大差异'), 250);
     expect(find.text('完整日期的最大差异'), findsOneWidget);
