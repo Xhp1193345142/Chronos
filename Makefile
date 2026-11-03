@@ -14,14 +14,14 @@ LOG_FILE := $(CURDIR)/build/preview-$(PORT).log
 PREVIEW_COMMAND := -m http.server $(PORT) --bind $(HOST) --directory $(WEB_DIR)
 
 .PHONY: help deps devices run-web run-android format format-check analyze test check \
-	build-web build-apk icons start stop restart status logs serve doctor
+	build-web build-apk icons preview-build start stop restart status logs serve doctor
 
 help:
 	@printf '%s\n' \
 	  'Chronos 常用命令' \
-	  '  make start                  构建 Web 演示并在后台启动 http://127.0.0.1:8765/' \
+	  '  make start                  构建并启动 Web 演示；缺少 Flutter 时使用现有构建' \
 	  '  make status|logs|stop      查看预览状态、日志或停止服务' \
-	  '  make restart                重建并重启预览服务' \
+	  '  make restart                重启预览，Flutter 可用时先重建' \
 	  '  make serve                  在前台运行 Web 预览' \
 	  '  make run-web                用 Flutter 在 Chrome 中调试演示版' \
 	  '  make run-android DEVICE=id  在指定 Android 设备上调试' \
@@ -62,6 +62,16 @@ check: format-check analyze test
 build-web:
 	$(FLUTTER) build web
 
+# Keep the last successful preview usable if a temporary Flutter SDK vanished.
+preview-build:
+	@if command -v "$(FLUTTER)" >/dev/null 2>&1; then \
+	  $(MAKE) --no-print-directory build-web FLUTTER="$(FLUTTER)"; \
+	elif [ -f "$(WEB_DIR)/index.html" ]; then \
+	  echo 'Flutter 未安装；使用上次成功构建的 Web 预览。'; \
+	else \
+	  echo 'Flutter 未安装且没有 Web 构建。请安装 Flutter 后运行 make start。'; exit 1; \
+	fi
+
 build-apk:
 	$(FLUTTER) build apk --debug
 
@@ -72,7 +82,7 @@ doctor:
 	$(FLUTTER) doctor -v
 
 # Store the PID under build/ so stopping the preview only targets this checkout.
-start: build-web
+start: preview-build
 	@mkdir -p "$(CURDIR)/build"; \
 	if [ -f "$(PID_FILE)" ]; then \
 	  pid=$$(cat "$(PID_FILE)"); \
@@ -127,5 +137,5 @@ logs:
 	@if [ ! -f "$(LOG_FILE)" ]; then echo '暂无预览日志。'; exit 1; fi
 	@tail -n 50 -f "$(LOG_FILE)"
 
-serve: build-web
+serve: preview-build
 	$(PYTHON) $(PREVIEW_COMMAND)

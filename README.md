@@ -18,7 +18,7 @@ make start                     # 构建并在后台启动 http://127.0.0.1:8765/
 make run-android DEVICE=<id>   # Android 真机可连接系统使用时间
 ```
 
-本地预览掉线时运行 `make restart`；用 `make status` 查看状态，`make logs` 查看日志，`make stop` 停止。也可运行 `make run-web` 在 Chrome 中调试，浏览器始终展示带标记的演示数据。`make help` 列出全部命令。若 Flutter 不在 `PATH` 中，可以指定 `FLUTTER=/path/to/flutter`。
+本地预览掉线时运行 `make restart`；用 `make status` 查看状态，`make logs` 查看日志，`make stop` 停止。`make start` 和 `make restart` 会在 Flutter 可用时重新构建；若 Flutter 暂时不可用但 `build/web/` 仍在，会启动上次成功构建的版本，并明确提示。源码修改后仍需先安装 Flutter 重新构建。也可运行 `make run-web` 在 Chrome 中调试，浏览器始终展示带标记的演示数据。`make help` 列出全部命令。若 Flutter 不在 `PATH` 中，可以指定 `FLUTTER=/path/to/flutter`。
 
 验证代码：
 
