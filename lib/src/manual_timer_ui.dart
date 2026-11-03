@@ -24,6 +24,14 @@ class _TimerHero extends StatelessWidget {
   final ManualTimerController timer;
   final bool demo;
 
+  Future<void> _start(BuildContext context, {String category = '未分类'}) async {
+    HapticFeedback.lightImpact();
+    if (!await timer.start(category: category) && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(timer.error ?? '计时已在进行中')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: timer,
@@ -33,11 +41,15 @@ class _TimerHero extends StatelessWidget {
       return Container(
         key: const Key('timer-hero'),
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(20, 19, 20, 20),
+        padding: const EdgeInsets.fromLTRB(21, 19, 21, 21),
         decoration: BoxDecoration(
-          color: palette.accent.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: palette.accent.withValues(alpha: 0.27)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [palette.accent.withValues(alpha: 0.16), palette.surface],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: palette.accent.withValues(alpha: 0.24)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,15 +85,15 @@ class _TimerHero extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 17),
+            const SizedBox(height: 18),
             if (active == null) ...[
               Text(
                 '开始记录现在',
                 style: TextStyle(
                   color: palette.textPrimary,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.6,
                 ),
               ),
               const SizedBox(height: 6),
@@ -89,22 +101,56 @@ class _TimerHero extends StatelessWidget {
                 '点击即开始，分类可以稍后再选。',
                 style: TextStyle(color: palette.textSecondary, fontSize: 12),
               ),
-              const SizedBox(height: 19),
+              const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 52,
                 child: FilledButton.icon(
                   key: const Key('timer-start'),
-                  onPressed: () async {
-                    if (!await timer.start() && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(timer.error ?? '计时已在进行中')),
-                      );
-                    }
-                  },
+                  onPressed: () => _start(context),
                   icon: const Icon(Icons.play_arrow_rounded),
                   label: const Text('开始计时'),
                 ),
+              ),
+              const SizedBox(height: 17),
+              Row(
+                children: [
+                  Text(
+                    '快捷开始',
+                    style: TextStyle(
+                      color: palette.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children:
+                          const [
+                            ('工作', Icons.work_outline_rounded),
+                            ('学习', Icons.auto_stories_outlined),
+                            ('阅读', Icons.menu_book_outlined),
+                          ].map((preset) {
+                            return ActionChip(
+                              key: Key('timer-quick-${preset.$1}'),
+                              avatar: Icon(preset.$2, size: 15),
+                              label: Text(preset.$1),
+                              labelStyle: const TextStyle(fontSize: 11),
+                              visualDensity: VisualDensity.compact,
+                              side: BorderSide(color: palette.border),
+                              backgroundColor: palette.surface.withValues(
+                                alpha: 0.7,
+                              ),
+                              onPressed: () =>
+                                  _start(context, category: preset.$1),
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ],
               ),
             ] else ...[
               InkWell(

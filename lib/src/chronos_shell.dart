@@ -104,44 +104,43 @@ class _ChronosHomeState extends State<ChronosHome> {
               ],
             ),
             const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          formatMinutes(DemoData.todayMinutes),
-                          key: const Key('today-duration'),
-                          style: TextStyle(
-                            color: chronosColors(context).textPrimary,
-                            fontSize: 37,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -1.4,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                formatMinutes(DemoData.todayMinutes),
+                key: const Key('today-duration'),
+                style: TextStyle(
+                  color: chronosColors(context).textPrimary,
+                  fontSize: 38,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -1.5,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _Badge('比上周同日少 ${formatMinutes(change)}'),
+            const SizedBox(height: 23),
+            Semantics(
+              label: '演示类别占比，${topCategory.label}最多',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    for (final entry in DemoData.categories.asMap().entries)
+                      Expanded(
+                        flex: entry.value.minutes,
+                        child: Container(
+                          height: 8,
+                          color: chronosColors(context).categoryAt(entry.key),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _Badge('今天少用 ${formatMinutes(change)}'),
-                    ],
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Semantics(
-                  label: '今日使用类别占比，${topCategory.label}最多',
-                  child: CustomPaint(
-                    size: const Size(88, 88),
-                    painter: _RingPainter(chronosColors(context)),
-                  ),
-                ),
-              ],
+              ),
             ),
-            Divider(color: chronosColors(context).border, height: 34),
+            const SizedBox(height: 17),
             Row(
               children: [
                 Container(
@@ -152,7 +151,7 @@ class _ChronosHomeState extends State<ChronosHome> {
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 9),
                 Expanded(
                   child: Text(
                     '使用最多 · ${topCategory.label}',

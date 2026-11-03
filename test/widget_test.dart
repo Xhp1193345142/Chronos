@@ -36,8 +36,8 @@ void main() {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(find.text('演示数据'), findsOneWidget);
     expect(find.byKey(const Key('timer-start')), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('今天少用 42 分钟'), 200);
-    expect(find.text('今天少用 42 分钟'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('比上周同日少 42 分钟'), 200);
+    expect(find.text('比上周同日少 42 分钟'), findsOneWidget);
     expect(find.byKey(const Key('today-duration')), findsOneWidget);
 
     await tester.tap(find.text('目标').last);
@@ -64,6 +64,21 @@ void main() {
     expect(find.byKey(const Key('timer-start')), findsOneWidget);
     await tester.scrollUntilVisible(find.text('1 段'), 200);
     expect(find.text('1 段'), findsOneWidget);
+  });
+
+  testWidgets('a quick action starts a categorized local timer', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ChronosApp(demoOnly: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timer-quick-阅读')));
+    await tester.pump();
+    expect(find.text('正在计时'), findsOneWidget);
+    expect(find.text('阅读'), findsWidgets);
+    await tester.tap(find.byKey(const Key('timer-stop')));
+    await tester.pump();
+    await tester.scrollUntilVisible(find.text('1 段'), 200);
+    expect(find.text('阅读'), findsWidgets);
   });
 
   testWidgets('selecting a day updates both trend charts', (tester) async {
@@ -96,7 +111,6 @@ void main() {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(find.byKey(const Key('hour-15')), 200);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('hour-15')));
     await tester.pumpAndSettle();

@@ -34,10 +34,12 @@ void main() {
 
     await tester.pumpWidget(const ChronosApp());
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('timer-start')), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('连接设备使用时间'), 200);
     expect(find.text('连接设备使用时间'), findsOneWidget);
     expect(find.byKey(const Key('live-today-total')), findsNothing);
-    expect(find.byKey(const Key('timer-start')), findsOneWidget);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+    await tester.scrollUntilVisible(find.text('先看演示数据'), 200);
+    await tester.ensureVisible(find.text('先看演示数据'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('先看演示数据'));
     await tester.pumpAndSettle();

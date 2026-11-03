@@ -78,52 +78,6 @@ Widget _insight(
   ),
 );
 
-class _RingPainter extends CustomPainter {
-  const _RingPainter(this.palette);
-
-  final ChronosPalette palette;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromCircle(
-      center: Offset(size.width / 2, size.height / 2),
-      radius: math.min(size.width, size.height) / 2 - 9,
-    );
-    canvas.drawArc(
-      rect,
-      0,
-      math.pi * 2,
-      false,
-      Paint()
-        ..color = palette.border
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 11,
-    );
-    const gap = 0.055;
-    var start = -math.pi / 2;
-    for (final entry in DemoData.categories.asMap().entries) {
-      final item = entry.value;
-      final sweep = item.minutes / DemoData.todayMinutes * math.pi * 2;
-      canvas.drawArc(
-        rect,
-        start + gap / 2,
-        sweep - gap,
-        false,
-        Paint()
-          ..color = palette.categoryAt(entry.key)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 11
-          ..strokeCap = StrokeCap.round,
-      );
-      start += sweep;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter oldDelegate) =>
-      oldDelegate.palette != palette;
-}
-
 class _HourlyChart extends StatelessWidget {
   const _HourlyChart({required this.selectedHour, required this.onSelect});
 

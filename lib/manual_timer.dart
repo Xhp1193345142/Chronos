@@ -141,14 +141,17 @@ class ManualTimerController extends ChangeNotifier {
     }
   }
 
-  Future<bool> start() async {
+  Future<bool> start({String category = '未分类'}) async {
     await load();
+    if (!manualCategories.contains(category)) {
+      throw ArgumentError.value(category, 'category', '未知的活动分类');
+    }
     if (_error != null || active != null) return false;
     final start = now;
     _entries = [
       ManualEntry(
         id: '${start.microsecondsSinceEpoch}-${_nextId++}',
-        category: '未分类',
+        category: category,
         segments: [ManualSegment(start, null)],
       ),
       ..._entries,

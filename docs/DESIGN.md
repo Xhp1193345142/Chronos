@@ -6,7 +6,7 @@ Chronos is a calm instrument panel for time, not a punishment dashboard. Lead wi
 
 ## Interface craft
 
-Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, a prominent timer starts immediately without a category prompt, followed by the local activity ledger and then device screen use or clearly labeled sample charts. A persistent dock action starts the timer from other tabs; while active it opens its controls. On Trends, manual activity and screen-use rhythms have distinct headings and totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
+Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, a prominent timer starts immediately without a category prompt; compact quick actions start common activity categories in one tap. The local activity ledger follows, then device screen use or clearly labeled sample charts. A persistent dock action starts the timer from other tabs; while active it opens its controls. On Trends, manual activity and screen-use rhythms have distinct headings and totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
 
 Use the platform's system font, tabular figures for large durations, restrained weights, aligned edges and consistent section spacing. Summary and control surfaces use a 20-point corner radius and subtle borders. Data charts sit on the page with a fine top rule instead of being enclosed in repeated cards. Reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
 
@@ -24,7 +24,7 @@ The appearance picker also offers **跟随系统**: light maps to 晨雾纸感 a
 
 Use `positive` for a factual favorable comparison, `caution` for elevated-but-ordinary usage, and `danger` only for an exceeded goal or destructive action. Color never replaces a numeric label, icon or explicit state text. Each theme has its own ordered usage-intensity scale and stable category-color order.
 
-Use quiet surfaces, subtle separators, and a consistent 8-point spacing scale. Large numbers should use tabular figures where available. Usage intensity is a tonal scale within each theme; category colors are reserved for actual categories, not assigned to ranked apps. Daily bars include a visible average rule. Category comparisons use a colored duration line and a hollow baseline point. Motion should explain a transition or selection; never animate charts simply to decorate them.
+Use quiet surfaces, subtle separators, and a consistent 8-point spacing scale. Large numbers should use tabular figures where available. Usage intensity is a tonal scale within each theme; category colors are reserved for actual categories, not assigned to ranked apps. The demo screen-time summary uses one proportional category strip with a labeled leading category instead of an additional donut. Daily bars include a visible average rule. Category comparisons use a colored duration line and a hollow baseline point. Motion should explain a transition or selection; never animate charts simply to decorate them.
 
 ## Primary screens
 
