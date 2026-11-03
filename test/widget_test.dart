@@ -103,7 +103,7 @@ void main() {
   });
 
   testWidgets('main charts fit a narrow phone', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
+    tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -112,8 +112,10 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(find.byKey(const Key('hour-15')), 200);
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const Key('hour-15')));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     expect(find.text('15:00–16:00  ·  34 分钟'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('影音娱乐'), 200);
     expect(tester.takeException(), isNull);

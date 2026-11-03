@@ -113,43 +113,48 @@ class _TimerHero extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 17),
+              Text(
+                '快捷开始',
+                style: TextStyle(
+                  color: palette.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  Text(
-                    '快捷开始',
-                    style: TextStyle(
-                      color: palette.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                  for (final preset in const [
+                    ('工作', Icons.work_outline_rounded),
+                    ('学习', Icons.auto_stories_outlined),
+                    ('阅读', Icons.menu_book_outlined),
+                  ]) ...[
+                    if (preset.$1 != '工作') const SizedBox(width: 7),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        key: Key('timer-quick-${preset.$1}'),
+                        onPressed: () => _start(context, category: preset.$1),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 11,
+                          ),
+                          minimumSize: Size.zero,
+                          visualDensity: VisualDensity.compact,
+                          side: BorderSide(color: palette.border),
+                          backgroundColor: palette.surface.withValues(
+                            alpha: 0.7,
+                          ),
+                          foregroundColor: palette.textPrimary,
+                        ),
+                        icon: Icon(preset.$2, size: 15, color: palette.accent),
+                        label: Text(
+                          preset.$1,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Wrap(
-                      spacing: 7,
-                      runSpacing: 7,
-                      children:
-                          const [
-                            ('工作', Icons.work_outline_rounded),
-                            ('学习', Icons.auto_stories_outlined),
-                            ('阅读', Icons.menu_book_outlined),
-                          ].map((preset) {
-                            return ActionChip(
-                              key: Key('timer-quick-${preset.$1}'),
-                              avatar: Icon(preset.$2, size: 15),
-                              label: Text(preset.$1),
-                              labelStyle: const TextStyle(fontSize: 11),
-                              visualDensity: VisualDensity.compact,
-                              side: BorderSide(color: palette.border),
-                              backgroundColor: palette.surface.withValues(
-                                alpha: 0.7,
-                              ),
-                              onPressed: () =>
-                                  _start(context, category: preset.$1),
-                            );
-                          }).toList(),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ] else ...[

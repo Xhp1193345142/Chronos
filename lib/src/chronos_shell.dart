@@ -469,15 +469,21 @@ class _ChronosHomeState extends State<ChronosHome> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '1 小时 38 分钟',
-                  style: TextStyle(
-                    color: chronosColors(context).textPrimary,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.bottomLeft,
+                    child: Text(
+                      '1 小时 38 分钟',
+                      style: TextStyle(
+                        color: chronosColors(context).textPrimary,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   '/ ${formatMinutes(goalMinutes)}',
                   style: TextStyle(

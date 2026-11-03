@@ -1,10 +1,12 @@
 SHELL := /bin/sh
 .DEFAULT_GOAL := help
 export FLUTTER_SUPPRESS_ANALYTICS := true
+export ANDROID_USER_HOME ?= $(HOME)/.android
 
 FLUTTER_FOUND := $(or $(shell command -v flutter 2>/dev/null),$(firstword $(wildcard /private/tmp/chronos-flutter-sdk/bin/flutter)))
 FLUTTER ?= $(if $(FLUTTER_FOUND),$(FLUTTER_FOUND),flutter)
 DART ?= $(if $(filter %/flutter,$(FLUTTER)),$(patsubst %/flutter,%/dart,$(FLUTTER)),dart)
+ADB ?= adb
 PYTHON ?= python3
 PORT ?= 8765
 HOST ?= 127.0.0.1
@@ -24,7 +26,7 @@ help:
 	  '  make restart                重启预览，Flutter 可用时先重建' \
 	  '  make serve                  在前台运行 Web 预览' \
 	  '  make run-web                用 Flutter 在 Chrome 中调试演示版' \
-	  '  make run-android DEVICE=id  在指定 Android 设备上调试' \
+	  '  make run-android DEVICE=id  安全覆盖安装并启动 Android 调试版' \
 	  '  make devices                列出 Flutter 可用设备' \
 	  '  make deps                   安装 Flutter 依赖' \
 	  '  make format|check           格式化代码或运行格式/分析/测试检查' \
@@ -43,7 +45,9 @@ run-web:
 
 run-android:
 	@if [ -z "$(DEVICE)" ]; then echo '请指定设备：make run-android DEVICE=<device-id>'; exit 2; fi
-	$(FLUTTER) run -d "$(DEVICE)"
+	@$(MAKE) --no-print-directory build-apk
+	$(ADB) -s "$(DEVICE)" install -r "$(CURDIR)/build/app/outputs/flutter-apk/app-debug.apk"
+	$(ADB) -s "$(DEVICE)" shell am start -n com.xhp.chronos/.MainActivity
 
 format:
 	$(DART) format .

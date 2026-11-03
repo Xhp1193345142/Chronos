@@ -73,6 +73,46 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('unreliable device totals explain why today is hidden', (
+    tester,
+  ) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          switch (call.method) {
+            case 'status':
+              return {'usageGranted': true, 'notificationsGranted': false};
+            case 'getGoals':
+              return [];
+            case 'insightPreferences':
+              return {'enabled': true, 'weekRangeSuppressedUntil': 0};
+            case 'snapshot':
+              return {
+                'state': 'empty',
+                'days': [
+                  {
+                    'date': '2026-11-03',
+                    'totalMinutes': 1439,
+                    'available': false,
+                    'reason': 'unreliable',
+                    'complete': false,
+                    'apps': [],
+                  },
+                ],
+              };
+            default:
+              throw MissingPluginException(call.method);
+          }
+        });
+
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('设备数据暂无法核对'), 200);
+    expect(find.text('设备数据暂无法核对'), findsOneWidget);
+    expect(find.byKey(const Key('live-today-total')), findsNothing);
+    await tester.scrollUntilVisible(find.textContaining('应用时长与屏幕交互时长不一致'), 200);
+    expect(find.textContaining('应用时长与屏幕交互时长不一致'), findsOneWidget);
+  });
+
   testWidgets('partial days show missing data instead of a zero-duration bar', (
     tester,
   ) async {

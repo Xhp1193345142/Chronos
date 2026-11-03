@@ -365,6 +365,7 @@ class _LiveExperienceState extends State<_LiveExperience>
     final snapshot = _snapshot!;
     final today = snapshot.today;
     if (today == null || !today.available) {
+      final unreliable = today?.reason == 'unreliable';
       return _page([
         const _Eyebrow('今日'),
         const SizedBox(height: 8),
@@ -374,12 +375,14 @@ class _LiveExperienceState extends State<_LiveExperience>
         const SizedBox(height: 25),
         _ManualToday(timer: widget.timer),
         const SizedBox(height: 29),
-        const _Section('屏幕使用时间', '尚无可展示的设备记录'),
+        _Section('屏幕使用时间', unreliable ? '设备数据暂无法核对' : '尚无可展示的设备记录'),
         const SizedBox(height: 14),
         _card(
           context,
           Text(
-            '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
+            unreliable
+                ? '设备返回的应用时长与屏幕交互时长不一致，暂不展示今日总量。可稍后刷新，并对照系统使用时间报告。'
+                : '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
             style: TextStyle(
               color: chronosColors(context).textSecondary,
               height: 1.5,

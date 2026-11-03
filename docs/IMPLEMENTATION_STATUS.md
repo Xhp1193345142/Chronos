@@ -1,4 +1,4 @@
-# Implementation status · 2026-10-30
+# Implementation status · 2026-11-03
 
 This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNCTIONAL_SPEC.md) remains the product target.
 
@@ -21,7 +21,8 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 - The device returned some historical app durations close to 24 hours. The reader now checks app foreground totals against Android screen-interactive event totals; inconsistent dates display as unavailable and do not affect insights. This is a conservative quality gate, not a substitute for comparing figures with the device's system Screen Time report.
 - Goal editor appearance and app selection list were inspected on the physical device. Two disabled temporary goals were saved and shown separately, then deleted. Notification permission was not requested; background threshold delivery, timezone changes, and reboot persistence remain unverified.
 - The appearance picker, all three palettes, and follow-system restoration were inspected on the Android 13 physical device.
-- `dart format .`, `flutter analyze`, `flutter test` (18 tests), `flutter build apk --debug`, and `flutter build web` passed for the manual-timer change. The updated APK was not installed over the existing app because its debug signature differs; the new timer remains unverified on a physical device. See the latest `dev` CI result for the pushed commit.
+- On November 3, the current UI was installed on an L60 (Android 13, 360dp wide). The timer card and three single-row quick actions rendered without clipping. One-tap reading timing, pause, resume, stop, and the resulting local record were verified; the test record was then deleted. A separate existing local record remained visible. The device reported usage access as allowed. Today's app foreground total exceeded the independently reported screen-interactive time enough to fail the reader's quality gate, so the app correctly hid that total and now explains why. Live total accuracy and reminder delivery remain unverified by this check.
+- `dart format .`, `flutter analyze`, `flutter test` (20 tests), and `flutter build apk --debug` passed. Android installs now use a stable debug key and `adb install -r` through `make run-android`; this command fails on a signature mismatch rather than automatically uninstalling an app containing local records.
 
 ## Outstanding work before a cross-platform release
 

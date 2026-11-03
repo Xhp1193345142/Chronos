@@ -19,6 +19,8 @@ Each task should state:
 4. Review the diff for unrelated changes, secrets, misleading copy, and broken permission behavior.
 5. Commit on `dev` with a descriptive message; push `dev`; check the GitHub Actions result and report verification and remaining limitations.
 
+For Android device checks, use a stable debug signing key and `make run-android DEVICE=<id>`. This builds the APK and installs it with `adb install -r`, which stops on a signature mismatch. Do not use `flutter run` against a device that may hold Chronos records: Flutter may uninstall the installed app automatically after a signature conflict, deleting app-local data. Never uninstall or clear app data to make a test install succeed.
+
 ## Reusable task prompt
 
 > Read `AGENTS.md` and the relevant Chronos docs. Implement **[one user-visible outcome]** on the existing `dev` branch without creating branches. Acceptance: **[observable behavior]**. Preserve **[explicit boundary]**. Run relevant formatting, analysis, tests, and a visual check. Report changed files, observed results, and anything not verified. Commit and push only after checks pass.
