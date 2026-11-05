@@ -2,13 +2,17 @@
 
 ## Direction
 
-Chronos is a calm instrument panel for time, not a punishment dashboard. Lead with a one-tap manual timer, then show specific, checkable observations and supporting charts. Manual time and phone usage are separate measures. Use generous spacing and a small number of strong colors.
+Chronos is a personal time journal. A warm paper surface, ink typography and category colors make the shape of a day visible. Lead with a one-tap manual timer, then show specific, checkable observations and supporting charts. Manual time and phone usage are separate measures. Use generous spacing and a small number of strong colors.
 
 ## Interface craft
 
 Aim for the clarity and finish of a first-party mobile app while keeping Chronos's own identity. Each screen starts with a quiet context label and one short title. On Today, a prominent timer starts immediately without a category prompt; compact quick actions start common activity categories in one tap. The local activity ledger follows, then device screen use or clearly labeled sample charts. A persistent dock action starts the timer from other tabs; while active it opens its controls. On Trends, manual activity and screen-use rhythms have distinct headings and totals. On Goals, the current goal and its controls have separate, clearly named groups. Do not repeat the same headline inside several equally prominent cards.
 
-Use the platform's system font, tabular figures for large durations, restrained weights, aligned edges and consistent section spacing. The top bar is a quiet wordmark with small source or settings controls. The Today heading has a real date above it, not another copy of “today.” The timer is the main control surface: a fine clock dial, one clear start action, and compact category shortcuts. Avoid decorative gradients and repeated accent-colored badges. Primary buttons use rounded rectangles; the persistent timer action is a circle. Keep only a few summary surfaces, with subtle borders and no competing headline cards. Data charts sit on the page with a fine top rule instead of being enclosed in repeated cards. Reserve strong color for selected data, status and controls. Theme changes keep chart meaning and layout stable. Interactive chart selection may animate briefly, but follows the platform's reduced-motion preference.
+Use the platform's system font, tabular figures for durations, restrained weights, aligned edges and consistent section spacing. Today opens with a date and “今天的手账.” The timer is a compact band with an immediate start action and three category shortcuts; an active timer shows duration, pause/resume and stop. Avoid large introductory cards and decorative clock faces.
+
+The journal is the visual center. A 24-hour ruler shows genuine timed segments with fixed category colors; paused intervals remain blank. A chronological ledger pairs start/end times, a colored margin, category, note and actual duration. Cross-midnight entries show the part of the range belonging to the displayed day. The ruler encodes duration and position; ledger rows remain readable regardless of duration. Empty paper means unrecorded time, never proof that no activity occurred. Manual records and phone use retain separate headings and totals.
+
+An empty journal offers a separate read-only sample. The sample must identify its data, have no save/edit controls and never write entries into local storage. Web preview `?preview=journal` opens this sample directly. Theme controls remain available in the sample. Keep quiet borders and reserve strong color for activities, selected data and controls. Respect reduced motion and text scaling.
 
 The app icon keeps Chronos's open-clock C mark in lavender on midnight indigo. The selected source image lives at `assets/branding/chronos-icon-source.png`; `tools/generate_icons.py` documents how platform icon sizes are derived. Do not reintroduce the old neon-green mark when updating platform assets.
 
@@ -17,7 +21,7 @@ The app icon keeps Chronos's open-clock C mark in lavender on midnight indigo. T
 | Theme | Background | Surface | Text | Focus |
 | --- | --- | --- | --- | --- |
 | 暮光星图 | `#0E1024` | `#1B2040` | `#F5F4FF` | `#AA9BFF` |
-| 晨雾纸感 | `#F6F4EE` | `#FFFFFF` | `#1D292B` | `#127B72` |
+| 晨雾纸感 | `#F8F6F1` | `#FFFFFF` | `#292D2A` | `#466554` |
 | 日落脉冲 | `#17131E` | `#292230` | `#FFF8F3` | `#FF967E` |
 
 The appearance picker also offers **跟随系统**: light maps to 晨雾纸感 and dark maps to 暮光星图. The selection is stored locally and applies to the device-data UI and demo UI. The Flutter `ChronosPalette` theme extension owns surface, text, focus, category, usage-intensity and semantic colors; usage data objects never own display colors.

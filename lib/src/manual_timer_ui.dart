@@ -18,9 +18,21 @@ String _manualDate(DateTime value) {
   return '${local.month}月${local.day}日';
 }
 
+String _journalStart(ManualEntry entry, DateTime day) =>
+    entry.startedAt.toLocal().isBefore(DateTime(day.year, day.month, day.day))
+    ? '00:00'
+    : _manualClock(entry.startedAt);
+
+String _journalEnd(ManualEntry entry, DateTime day) {
+  final boundary = DateTime(day.year, day.month, day.day + 1);
+  if ((entry.endedAt ?? DateTime.now()).toLocal().compareTo(boundary) >= 0) {
+    return '24:00';
+  }
+  return entry.isActive ? '现在' : _manualClock(entry.endedAt!);
+}
+
 class _TimerHero extends StatelessWidget {
   const _TimerHero({required this.timer, this.demo = false});
-
   final ManualTimerController timer;
   final bool demo;
 
@@ -36,166 +48,137 @@ class _TimerHero extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: timer,
     builder: (context, _) {
-      final palette = chronosColors(context);
+      final p = chronosColors(context);
       final active = timer.active;
       return Container(
         key: const Key('timer-hero'),
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(21, 20, 21, 20),
+        padding: const EdgeInsets.symmetric(vertical: 19),
         decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: BorderRadius.circular(21),
-          border: Border.all(color: palette.border.withValues(alpha: 0.65)),
+          border: Border(
+            top: BorderSide(color: p.border),
+            bottom: BorderSide(color: p.border),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  active == null
-                      ? '手动计时'
-                      : active.isRunning
-                      ? '正在计时'
-                      : '已暂停',
-                  style: TextStyle(
-                    color: active == null
-                        ? palette.textSecondary
-                        : palette.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  demo ? '本机记录 · 非演示' : '仅存本机',
-                  style: TextStyle(color: palette.textSecondary, fontSize: 11),
-                ),
-              ],
-            ),
-            const SizedBox(height: 19),
             if (active == null) ...[
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      '为此刻计时',
-                      style: TextStyle(
-                        color: palette.textPrimary,
-                        fontSize: 27,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.9,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '留下一段时间',
+                          style: TextStyle(
+                            color: p.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          demo ? '本机计时 · 非演示记录' : '手动计时 · 仅存本机',
+                          style: TextStyle(
+                            color: p.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  _ChronosDial(color: palette.accent, track: palette.border),
+                  const SizedBox(width: 12),
+                  FilledButton.icon(
+                    key: const Key('timer-start'),
+                    onPressed: () => _start(context),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                    label: const Text('开始计时', style: TextStyle(fontSize: 13)),
+                  ),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                '记录你正在做的事，稍后也能补充分类。',
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 53,
-                child: FilledButton.icon(
-                  key: const Key('timer-start'),
-                  onPressed: () => _start(context),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('开始计时'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 17),
-                child: Divider(color: palette.border, height: 1),
-              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  for (final preset in const [
-                    ('工作', Icons.work_outline_rounded),
-                    ('学习', Icons.auto_stories_outlined),
-                    ('阅读', Icons.menu_book_outlined),
-                  ]) ...[
-                    if (preset.$1 != '工作') const SizedBox(width: 7),
+                  for (final category in const ['工作', '学习', '阅读'])
                     Expanded(
-                      child: OutlinedButton.icon(
-                        key: Key('timer-quick-${preset.$1}'),
-                        onPressed: () => _start(context, category: preset.$1),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 3,
-                            vertical: 10,
-                          ),
-                          minimumSize: Size.zero,
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide(color: palette.border),
-                          backgroundColor: palette.surfaceRaised.withValues(
-                            alpha: 0.55,
-                          ),
-                          foregroundColor: palette.textPrimary,
+                      child: TextButton(
+                        key: Key('timer-quick-$category'),
+                        onPressed: () => _start(context, category: category),
+                        style: TextButton.styleFrom(
+                          foregroundColor: p.textSecondary,
+                          minimumSize: const Size(0, 44),
+                          padding: EdgeInsets.zero,
                         ),
-                        icon: Icon(
-                          preset.$2,
-                          size: 15,
-                          color: palette.textSecondary,
-                        ),
-                        label: Text(
-                          preset.$1,
-                          style: const TextStyle(fontSize: 11),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: p.manualCategory(category),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              category,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: 5),
+                            const Icon(Icons.north_east_rounded, size: 11),
+                          ],
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ] else ...[
-              InkWell(
-                onTap: () =>
-                    _showManualEntryEditor(context, timer, entry: active),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        active.category,
-                        style: TextStyle(
-                          color: palette.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: p.manualCategory(active.category),
+                      shape: BoxShape.circle,
                     ),
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 17,
-                      color: palette.textSecondary,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    active.isRunning ? '正在计时' : '已暂停',
+                    style: TextStyle(color: p.accent, fontSize: 12),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () =>
+                        _showManualEntryEditor(context, timer, entry: active),
+                    child: Text('${active.category}  ›'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 7),
               Text(
                 _timerDuration(active.elapsed(timer.now)),
                 key: const Key('timer-elapsed'),
                 style: TextStyle(
-                  color: palette.textPrimary,
-                  fontSize: 39,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -1.8,
+                  color: p.textPrimary,
+                  fontSize: 38,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -1.2,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
               Text(
                 '${_manualClock(active.startedAt)} 开始${active.elapsed(timer.now).inHours >= 12 ? ' · 已超过 12 小时，请核对是否忘记结束' : ''}',
-                style: TextStyle(color: palette.textSecondary, fontSize: 12),
+                style: TextStyle(color: p.textSecondary, fontSize: 11),
               ),
-              const SizedBox(height: 17),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -210,7 +193,7 @@ class _TimerHero extends StatelessWidget {
                       label: Text(active.isRunning ? '暂停' : '继续'),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
                       key: const Key('timer-stop'),
@@ -221,87 +204,16 @@ class _TimerHero extends StatelessWidget {
                 ],
               ),
             ],
-            if (timer.error != null) ...[
-              const SizedBox(height: 10),
+            if (timer.error != null)
               Text(
                 timer.error!,
-                style: TextStyle(color: palette.danger, fontSize: 12),
+                style: TextStyle(color: p.danger, fontSize: 12),
               ),
-            ],
           ],
         ),
       );
     },
   );
-}
-
-class _ChronosDial extends StatelessWidget {
-  const _ChronosDial({required this.color, required this.track});
-
-  final Color color;
-  final Color track;
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: SizedBox(
-      width: 49,
-      height: 49,
-      child: CustomPaint(painter: _ChronosDialPainter(color, track)),
-    ),
-  );
-}
-
-class _ChronosDialPainter extends CustomPainter {
-  const _ChronosDialPainter(this.color, this.track);
-
-  final Color color;
-  final Color track;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.shortestSide / 2 - 2;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi * 0.72,
-      math.pi * 1.82,
-      false,
-      Paint()
-        ..color = track
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round,
-    );
-    for (var tick = 0; tick < 12; tick++) {
-      final angle = tick * math.pi / 6 - math.pi / 2;
-      final outer =
-          center + Offset(math.cos(angle), math.sin(angle)) * (radius - 5);
-      final inner =
-          center +
-          Offset(math.cos(angle), math.sin(angle)) *
-              (radius - (tick % 3 == 0 ? 9 : 7));
-      canvas.drawLine(
-        inner,
-        outer,
-        Paint()
-          ..color = tick % 3 == 0 ? color : track
-          ..strokeWidth = tick % 3 == 0 ? 1.5 : 1,
-      );
-    }
-    canvas.drawLine(
-      center,
-      center + Offset(0, -(radius - 11)),
-      Paint()
-        ..color = color
-        ..strokeWidth = 1.7
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawCircle(center, 2.3, Paint()..color = color);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ChronosDialPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.track != track;
 }
 
 class _TimerDockAction extends StatelessWidget {
@@ -358,23 +270,31 @@ class _TimerDockAction extends StatelessWidget {
 
 class _ManualToday extends StatelessWidget {
   const _ManualToday({required this.timer});
-
   final ManualTimerController timer;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: timer,
     builder: (context, _) {
-      final palette = chronosColors(context);
+      final p = chronosColors(context);
       final today = DateTime.now();
       final entries = timer.entriesForDay(today);
-      final total = timer.durationForDay(today);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(child: _Section('今日记录', '${_manualDate(today)} · 手动计时')),
+              Expanded(
+                child: Text(
+                  '一天的颜色',
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
               TextButton(
                 onPressed: () => Navigator.push<void>(
                   context,
@@ -382,128 +302,362 @@ class _ManualToday extends StatelessWidget {
                     builder: (_) => _ManualHistoryPage(timer: timer),
                   ),
                 ),
-                style: TextButton.styleFrom(
-                  foregroundColor: palette.textSecondary,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                ),
-                child: const Text('全部'),
+                style: TextButton.styleFrom(foregroundColor: p.textSecondary),
+                child: const Text('历史', style: TextStyle(fontSize: 12)),
               ),
-              TextButton.icon(
+              IconButton(
                 key: const Key('timer-backfill'),
+                tooltip: '补记时间',
                 onPressed: () => _showManualEntryEditor(context, timer),
-                icon: const Icon(Icons.add_rounded, size: 17),
-                label: const Text('补记'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                ),
+                icon: const Icon(Icons.add_rounded, size: 20),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _chartPanel(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      entries.isEmpty
-                          ? '还没有手动记录'
-                          : '已记录 ${_timerDuration(total)}',
-                      style: TextStyle(
-                        color: palette.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${entries.length} 段',
-                      style: TextStyle(
-                        color: palette.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                if (entries.isEmpty) ...[
-                  const SizedBox(height: 9),
-                  const _Hint('点击上方开始，或补记已经做过的事。'),
-                ] else ...[
-                  const SizedBox(height: 17),
-                  _ManualDayStrip(timer: timer, day: today, entries: entries),
-                ],
-                for (final entry in entries.take(5)) ...[
-                  const SizedBox(height: 14),
-                  InkWell(
-                    key: Key('timer-entry-${entry.id}'),
-                    onTap: () =>
-                        _showManualEntryEditor(context, timer, entry: entry),
-                    child: Row(
-                      children: [
-                        Container(width: 2, height: 32, color: palette.accent),
-                        const SizedBox(width: 11),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.category,
-                                style: TextStyle(
-                                  color: palette.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                '${_manualClock(entry.startedAt)}–${entry.isActive ? '现在' : _manualClock(entry.endedAt!)}${entry.note.isEmpty ? '' : ' · ${entry.note}'}',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: palette.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          _timerDuration(
-                            timer.entryDurationForDay(entry, today),
-                          ),
-                          style: TextStyle(
-                            color: palette.textPrimary,
-                            fontSize: 12,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Icon(
-                          Icons.chevron_right,
-                          size: 16,
-                          color: palette.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (entries.length > 5) ...[
-                  const SizedBox(height: 13),
-                  Text(
-                    '另有 ${entries.length - 5} 段记录',
-                    style: TextStyle(
-                      color: palette.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          const SizedBox(height: 3),
+          _JournalLedger(
+            timer: timer,
+            day: today,
+            entries: entries,
+            onEntry: (entry) =>
+                _showManualEntryEditor(context, timer, entry: entry),
           ),
+          if (entries.isEmpty) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => _JournalPreview(timer: timer),
+                  ),
+                ),
+                child: const Text('看看手账样例  ↗', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+          ],
         ],
       );
     },
   );
+}
+
+class _JournalLedger extends StatelessWidget {
+  const _JournalLedger({
+    required this.timer,
+    required this.day,
+    required this.entries,
+    this.onEntry,
+  });
+  final ManualTimerController timer;
+  final DateTime day;
+  final List<ManualEntry> entries;
+  final ValueChanged<ManualEntry>? onEntry;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = chronosColors(context);
+    final ordered = [...entries]
+      ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    final total = entries.fold(
+      Duration.zero,
+      (value, entry) => value + timer.entryDurationForDay(entry, day),
+    );
+    final categories = entries.map((entry) => entry.category).toSet();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Text(
+                _timerDuration(total),
+                style: TextStyle(
+                  color: p.textPrimary,
+                  fontSize: 31,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -1,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Text(
+                '${entries.length} 段',
+                style: TextStyle(color: p.textSecondary, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Text(
+          '手动记录 · 留白处尚未记录',
+          style: TextStyle(color: p.textSecondary, fontSize: 11),
+        ),
+        const SizedBox(height: 22),
+        _ManualDayStrip(timer: timer, day: day, entries: entries),
+        const SizedBox(height: 17),
+        if (categories.isNotEmpty)
+          Wrap(
+            spacing: 15,
+            runSpacing: 8,
+            children: [
+              for (final category in categories)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: p.manualCategory(category),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      category,
+                      style: TextStyle(color: p.textSecondary, fontSize: 10),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        const SizedBox(height: 22),
+        if (ordered.isEmpty)
+          Column(
+            children: [
+              for (final hour in ['08:00', '12:00', '18:00'])
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 18),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          hour,
+                          style: TextStyle(
+                            color: p.textSecondary.withValues(alpha: 0.65),
+                            fontSize: 10,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(color: p.border.withValues(alpha: 0.6)),
+                      ),
+                    ],
+                  ),
+                ),
+              Text(
+                '今天的故事，从一段记录开始。',
+                style: TextStyle(color: p.textSecondary, fontSize: 12),
+              ),
+            ],
+          )
+        else ...[
+          for (final entry in ordered.take(8))
+            Semantics(
+              button: onEntry != null,
+              label:
+                  '${entry.category}，${_manualClock(entry.startedAt)}开始，记录${_timerDuration(timer.entryDurationForDay(entry, day))}',
+              child: InkWell(
+                key: Key('timer-entry-${entry.id}'),
+                onTap: onEntry == null ? null : () => onEntry!(entry),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 49,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _journalStart(entry, day),
+                              style: TextStyle(
+                                color: p.textPrimary,
+                                fontSize: 11,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _journalEnd(entry, day),
+                              style: TextStyle(
+                                color: p.textSecondary,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 3,
+                        height: 62,
+                        decoration: BoxDecoration(
+                          color: p.manualCategory(entry.category),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.only(bottom: 15),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: p.border.withValues(alpha: 0.55),
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      entry.category,
+                                      style: TextStyle(
+                                        color: p.manualCategory(entry.category),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    _timerDuration(
+                                      timer.entryDurationForDay(entry, day),
+                                    ),
+                                    style: TextStyle(
+                                      color: p.textSecondary,
+                                      fontSize: 11,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                entry.note.isEmpty
+                                    ? entry.category
+                                    : entry.note,
+                                style: TextStyle(
+                                  color: p.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                ),
+                              ),
+                              if (entry.segments.length > 1)
+                                Text(
+                                  '含暂停 · 仅累计实际计时',
+                                  style: TextStyle(
+                                    color: p.textSecondary,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (ordered.length > 8) _Hint('另有 ${ordered.length - 8} 段 · 在历史中查看'),
+        ],
+      ],
+    );
+  }
+}
+
+class _JournalPreview extends StatelessWidget {
+  const _JournalPreview({required this.timer});
+  final ManualTimerController timer;
+
+  @override
+  Widget build(BuildContext context) {
+    final day = DateTime(2026, 11, 5);
+    ManualEntry sample(
+      String id,
+      String category,
+      String note,
+      int hour,
+      int minute,
+      int length,
+    ) {
+      final start = DateTime(2026, 11, 5, hour, minute).toUtc();
+      final end = start.add(Duration(minutes: length));
+      return ManualEntry(
+        id: id,
+        category: category,
+        note: note,
+        segments: [ManualSegment(start, end)],
+        completedAt: end,
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('手账样例'),
+        leading: IconButton(
+          tooltip: '返回今日',
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacement<void, void>(
+                context,
+                MaterialPageRoute(builder: (_) => ChronosHome(timer: timer)),
+              );
+            }
+          },
+        ),
+        actions: [
+          IconButton(
+            tooltip: '切换主题',
+            onPressed: () => showChronosThemePicker(context),
+            icon: const Icon(Icons.palette_outlined),
+          ),
+        ],
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 610),
+          child: _page([
+            const _Eyebrow('只读样例 · 不保存到本机'),
+            const SizedBox(height: 10),
+            const _Heading('平凡的一天'),
+            const SizedBox(height: 8),
+            const _Hint('11月5日 · 以下活动均为示例，与真实记录分开。'),
+            const SizedBox(height: 30),
+            _JournalLedger(
+              timer: timer,
+              day: day,
+              entries: [
+                sample('sample-work', '工作', '给一个想法，完整的专注', 9, 0, 110),
+                sample('sample-life', '生活', '做午饭，慢慢吃', 12, 10, 45),
+                sample('sample-read', '阅读', '读完搁置很久的那一章', 14, 0, 50),
+                sample('sample-exercise', '运动', '去河边走一走', 17, 20, 40),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const _Hint('手机使用会出现在独立区域，两种时长不相加。'),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
 class _ManualDayStrip extends StatelessWidget {
@@ -529,15 +683,20 @@ class _ManualDayStrip extends StatelessWidget {
         children: [
           LayoutBuilder(
             builder: (context, constraints) => SizedBox(
-              height: 12,
+              height: 30,
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
-                  Container(
-                    height: 4,
-                    width: constraints.maxWidth,
-                    color: palette.border,
-                  ),
+                  for (var hour = 0; hour <= 24; hour++)
+                    Positioned(
+                      left: (constraints.maxWidth - 1) * hour / 24,
+                      top: hour % 6 == 0 ? 2 : 8,
+                      bottom: hour % 6 == 0 ? 2 : 8,
+                      child: Container(
+                        width: 1,
+                        color: palette.border.withValues(alpha: 0.7),
+                      ),
+                    ),
                   for (final entry in entries)
                     for (final segment in entry.segments)
                       if ((segment.end ?? timer.now).toLocal().isAfter(start) &&
@@ -569,9 +728,9 @@ class _ManualDayStrip extends StatelessWidget {
                                 span,
                           ),
                           child: Container(
-                            height: 7,
+                            height: 14,
                             decoration: BoxDecoration(
-                              color: palette.accent,
+                              color: palette.manualCategory(entry.category),
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),

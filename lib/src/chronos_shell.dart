@@ -69,7 +69,7 @@ class _ChronosHomeState extends State<ChronosHome> {
     return _page([
       _Eyebrow('本机今日 · ${_manualDate(DateTime.now())}'),
       const SizedBox(height: 7),
-      const _Heading('今天'),
+      const _Heading('今天的手账'),
       const SizedBox(height: 19),
       _TimerHero(timer: widget.timer, demo: true),
       const SizedBox(height: 25),

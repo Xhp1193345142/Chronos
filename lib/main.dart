@@ -129,7 +129,9 @@ class _ChronosAppState extends State<ChronosApp> {
             child: child!,
           );
         },
-        home: widget.demoOnly || kIsWeb
+        home: kIsWeb && Uri.base.queryParameters['preview'] == 'journal'
+            ? _JournalPreview(timer: _manualTimer)
+            : widget.demoOnly || kIsWeb
             ? ChronosHome(timer: _manualTimer)
             : _LiveExperience(timer: _manualTimer),
       ),

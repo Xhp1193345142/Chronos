@@ -1,4 +1,4 @@
-# Implementation status · 2026-11-03
+# Implementation status · 2026-11-05
 
 This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNCTIONAL_SPEC.md) remains the product target.
 
@@ -33,3 +33,11 @@ This page records what the repository can actually do. [FUNCTIONAL_SPEC.md](FUNC
 4. Decide whether optional AI adds value after the non-AI product is validated. No protected iOS report data should be exported to Flutter or a cloud model. Apple's [Device Activity Report](https://developer.apple.com/documentation/deviceactivity/deviceactivityreport) runs in a protected extension.
 
 The local debug APK is for review. The Android release build still uses a debug signing configuration; store release signing and distribution are separate tasks.
+
+## Time journal preview · November 5
+
+- Today now has a compact one-tap timer, category-colored 24-hour ruler and chronological local activity ledger. Pause gaps remain blank and cross-midnight ranges are clipped to the journal day.
+- Empty journals offer a separate read-only sample; Web `?preview=journal` opens it directly. Sample activities are ephemeral and never saved to local entries.
+- This revision changes the shared Flutter UI, not native usage-data collection or notification delivery.
+- `dart format .`, `flutter analyze`, all 22 Flutter tests, `flutter build web`, and `flutter build apk --debug` passed. The added widget checks cover sample isolation and paused records crossing midnight.
+- Browser visual checks covered 360- and 390-point phone widths, morning paper and twilight palettes. Screenshots in `docs/journal-home.jpg` and `docs/journal-preview.jpg` contain empty local history or explicitly labeled sample data. This revision has not been installed or profiled on a physical device.

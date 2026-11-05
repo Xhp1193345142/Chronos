@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:chronos/demo_data.dart';
 import 'package:chronos/main.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +83,92 @@ void main() {
     await tester.scrollUntilVisible(find.text('1 段'), 200);
     expect(find.text('阅读'), findsWidgets);
   });
+
+  testWidgets(
+    'journal sample is labeled, read only and leaves local records empty',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const ChronosApp(demoOnly: true));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('看看手账样例  ↗'), 150);
+      await Scrollable.ensureVisible(
+        tester.element(find.text('看看手账样例  ↗')),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('看看手账样例  ↗'));
+      await tester.pumpAndSettle();
+      expect(find.text('只读样例 · 不保存到本机'), findsOneWidget);
+      expect(find.text('04:05:00'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('去河边走一走'), 150);
+      expect(find.text('去河边走一走'), findsOneWidget);
+      expect(find.text('保存记录'), findsNothing);
+      expect(
+        (await SharedPreferences.getInstance()).getString(
+          'chronos_manual_entries_v1',
+        ),
+        isNull,
+      );
+      expect(tester.takeException(), isNull);
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await tester.pumpAndSettle();
+      expect(find.text('0 段'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'journal clips a crossing-midnight record and counts paused segments',
+    (tester) async {
+      final now = DateTime.now();
+      final midnight = DateTime(now.year, now.month, now.day);
+      SharedPreferences.setMockInitialValues({
+        'chronos_manual_entries_v1': jsonEncode([
+          {
+            'id': 'cross-midnight',
+            'category': '阅读',
+            'note': '跨夜阅读',
+            'segments': [
+              {
+                'start': midnight
+                    .subtract(const Duration(minutes: 10))
+                    .toUtc()
+                    .toIso8601String(),
+                'end': midnight
+                    .add(const Duration(minutes: 10))
+                    .toUtc()
+                    .toIso8601String(),
+              },
+              {
+                'start': midnight
+                    .add(const Duration(minutes: 20))
+                    .toUtc()
+                    .toIso8601String(),
+                'end': midnight
+                    .add(const Duration(minutes: 30))
+                    .toUtc()
+                    .toIso8601String(),
+              },
+            ],
+            'completedAt': midnight
+                .add(const Duration(minutes: 30))
+                .toUtc()
+                .toIso8601String(),
+          },
+        ]),
+      });
+      await tester.pumpWidget(const ChronosApp(demoOnly: true));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('跨夜阅读'), 150);
+      expect(find.text('00:00'), findsOneWidget);
+      expect(find.text('00:30'), findsOneWidget);
+      expect(find.text('00:20:00'), findsWidgets);
+      expect(find.text('含暂停 · 仅累计实际计时'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('selecting a day updates both trend charts', (tester) async {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));

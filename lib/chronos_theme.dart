@@ -58,6 +58,17 @@ class ChronosPalette extends ThemeExtension<ChronosPalette> {
   final Color entertainment;
   final Color other;
 
+  Color manualCategory(String category) => switch (category) {
+    '工作' => work,
+    '学习' => entertainment,
+    '阅读' => other,
+    '运动' => social,
+    '生活' => caution,
+    '社交' => positive,
+    '休息' => usageMedium,
+    _ => textSecondary,
+  };
+
   Color categoryAt(int index) => switch (index % 4) {
     0 => social,
     1 => work,
@@ -86,13 +97,13 @@ class ChronosPalette extends ThemeExtension<ChronosPalette> {
   );
 
   static const morning = ChronosPalette(
-    background: Color(0xFFF6F4EE),
+    background: Color(0xFFF8F6F1),
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFF0F3EF),
     border: Color(0xFFD7DFDA),
-    textPrimary: Color(0xFF1D292B),
+    textPrimary: Color(0xFF292D2A),
     textSecondary: Color(0xFF59696D),
-    accent: Color(0xFF127B72),
+    accent: Color(0xFF466554),
     positive: Color(0xFF127B72),
     caution: Color(0xFF9D5D20),
     danger: Color(0xFFB74945),

@@ -122,7 +122,7 @@ class _LiveExperienceState extends State<_LiveExperience>
               child: ListView(
                 padding: const EdgeInsets.all(24),
                 children: [
-                  const _Heading('今天'),
+                  const _Heading('今天的手账'),
                   const SizedBox(height: 18),
                   _TimerHero(timer: widget.timer),
                   const SizedBox(height: 30),
@@ -208,7 +208,7 @@ class _LiveExperienceState extends State<_LiveExperience>
             children: [
               const _Eyebrow('本机手动计时'),
               const SizedBox(height: 7),
-              const _Heading('今天'),
+              const _Heading('今天的手账'),
               const SizedBox(height: 18),
               _TimerHero(timer: widget.timer),
               const SizedBox(height: 24),
@@ -362,7 +362,7 @@ class _LiveExperienceState extends State<_LiveExperience>
       return _page([
         _Eyebrow('星期${_weekday(now)} · ${now.month}月${now.day}日'),
         const SizedBox(height: 8),
-        const _Heading('今天'),
+        const _Heading('今天的手账'),
         const SizedBox(height: 18),
         _TimerHero(timer: widget.timer),
         const SizedBox(height: 25),
@@ -411,7 +411,7 @@ class _LiveExperienceState extends State<_LiveExperience>
         '星期${_weekday(today.date)} · ${today.date.month}月${today.date.day}日',
       ),
       const SizedBox(height: 7),
-      const _Heading('今天'),
+      const _Heading('今天的手账'),
       const SizedBox(height: 4),
       const _Hint('手动记录与屏幕使用分别查看'),
       const SizedBox(height: 19),
