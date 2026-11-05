@@ -63,8 +63,8 @@ class ChronosPalette extends ThemeExtension<ChronosPalette> {
     '学习' => entertainment,
     '阅读' => other,
     '运动' => social,
-    '生活' => caution,
-    '社交' => positive,
+    '生活' => Color.lerp(social, danger, 0.55)!,
+    '社交' => Color.lerp(entertainment, danger, 0.5)!,
     '休息' => usageMedium,
     _ => textSecondary,
   };
