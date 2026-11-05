@@ -42,6 +42,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["disableAnalytics"] = "true"
     }
 
     signingConfigs {
@@ -70,4 +72,10 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
 }

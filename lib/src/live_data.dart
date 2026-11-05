@@ -1,20 +1,38 @@
 part of '../main.dart';
 
+String _goalCheckLabel(String result) => switch (result) {
+  'sent' => '提醒已提交系统',
+  'already_notified' => '今天已提醒，不重复发送',
+  'below_limit' => '尚未达到上限',
+  'disabled' => '目标已关闭',
+  'paused' => '今天已暂停',
+  'permission_denied' => '使用权限未开启',
+  'notifications_denied' => '系统或通知渠道未开启',
+  'data_unavailable' => '当天数据无法核对，未发送提醒',
+  'changed' => '目标已变化，请重新检查',
+  'day_changed' => '日期已变化，请重新检查',
+  'error' => '检查失败，请重试',
+  _ => '尚未检查',
+};
+
 class _NativeStatus {
   const _NativeStatus({
     required this.usageGranted,
     required this.notificationsGranted,
     required this.openGoal,
+    this.monitorScheduled = false,
   });
 
   final bool usageGranted;
   final bool notificationsGranted;
   final bool openGoal;
+  final bool monitorScheduled;
 
   factory _NativeStatus.fromMap(Map<Object?, Object?> map) => _NativeStatus(
     usageGranted: map['usageGranted'] == true,
     notificationsGranted: map['notificationsGranted'] == true,
     openGoal: map['openGoal'] == true,
+    monitorScheduled: map['monitorScheduled'] == true,
   );
 }
 
@@ -48,6 +66,7 @@ class _LiveDay {
     required this.available,
     required this.reason,
     required this.complete,
+    this.source = '',
   });
 
   final DateTime date;
@@ -57,6 +76,7 @@ class _LiveDay {
   final bool available;
   final String reason;
   final bool complete;
+  final String source;
 
   factory _LiveDay.fromMap(Map<Object?, Object?> map) => _LiveDay(
     date: DateTime.parse(map['date'] as String),
@@ -70,6 +90,7 @@ class _LiveDay {
     available: map['available'] == true,
     reason: map['reason'] as String? ?? '',
     complete: map['complete'] == true,
+    source: map['source'] as String? ?? '',
   );
 }
 
@@ -115,6 +136,7 @@ class _LiveGoal {
     required this.enabled,
     required this.pausedDate,
     required this.lastCheckedAt,
+    this.lastCheckResult = 'never',
   });
 
   final String? id;
@@ -126,6 +148,7 @@ class _LiveGoal {
   final bool enabled;
   final String pausedDate;
   final DateTime? lastCheckedAt;
+  final String lastCheckResult;
 
   factory _LiveGoal.fromMap(Map<Object?, Object?> map) => _LiveGoal(
     id: map['id'] as String?,
@@ -136,6 +159,7 @@ class _LiveGoal {
     tone: map['tone'] as String? ?? '直接',
     enabled: map['enabled'] == true,
     pausedDate: map['pausedDate'] as String? ?? '',
+    lastCheckResult: map['lastCheckResult'] as String? ?? 'never',
     lastCheckedAt:
         map['lastCheckedAtMillis'] is num &&
             (map['lastCheckedAtMillis'] as num) > 0
@@ -184,6 +208,17 @@ class _InsightPreferences {
 
 class _NativeBridge {
   static const _channel = MethodChannel('chronos/native');
+
+  Future<void> checkGoalsNow() => _channel.invokeMethod('checkGoalsNow');
+
+  void onGoalRequested(Future<void> Function()? callback) =>
+      _channel.setMethodCallHandler(
+        callback == null
+            ? null
+            : (call) async {
+                if (call.method == 'openGoal') await callback();
+              },
+      );
 
   Future<_NativeStatus> status() async {
     final map = await _channel.invokeMapMethod<Object?, Object?>('status');

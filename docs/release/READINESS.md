@@ -2,6 +2,8 @@
 
 Owner: Elton. Decision recorded 2026-11-05: prepare both iOS and Android to a commercial release standard; current product is free. No store submission or billing integration is requested.
 
+Current delivery priority: Android first; iOS work is deferred by the user. `make release-check-android` excludes Xcode/iPhone gates and uses the Android-specific profile flag. The all-platform report retains iOS gaps for future work.
+
 ## Product boundary
 
 The dependable shared product is a local time journal with timing, pause/resume, notes, backfill, history, seven-day trends and user-controlled backup. Android device usage and goals are optional. Do not market unverified usage accuracy or background delivery as a guaranteed capability. iOS starts in the genuine journal, not a screen-time demo; protected device usage remains a separate unfinished module.
@@ -18,8 +20,8 @@ The dependable shared product is a local time journal with timing, pause/resume,
 | Deletion | Explicit confirmation; clear SQLite and legacy payload; targets/system histories remain correctly described. Never test destructive deletion on the user's real history. |
 | Help and privacy | In-app local document and public support project. Publish the static privacy document to a stable HTTPS address before a real submission. Add a private support email when available. |
 | Android binary | Production release must have real signing; no debug fallback. Debug APK is review-only. Target API, merged permissions and native-library 16 KB alignment must be checked for each production artifact. |
-| Android device usage | Compare with the system report on at least two devices/OEMs and across midnight; investigate current unreliable-day gate. Remains pending. |
-| Notifications | Device notification permission, threshold, day reset, revoked permission, reboot and delayed scheduling; pending. Do not simulate success with a notification test alone. |
+| Android device usage | Event-based natural-day accounting replaces misaligned OS buckets; boundary/lock/restart/conflict tests and L60 display check passed. Independent system-report comparison on two devices/OEMs and across midnight remains pending. |
+| Notifications | L60 Android 13: actual usage exceeded a temporary 30-minute goal; a real system notification was observed. Forced repeated JobScheduler runs preserved the same notification record/timestamps; tapping returned to goals. Temporary goal removed. Day reset, revoked permission, reboot and natural scheduling delays remain pending. |
 | iOS | Full Xcode + iPhone unavailable. Build/archive, SQLite migration, file picker, lifecycle, VoiceOver and real-device checks pending. Family Controls distribution entitlement and protected extensions needed for device-usage feature. |
 | Performance | Profile/release scrolling, cold/warm start, 10k-record history, low storage, large text and reduced motion; pending. Debug visual inspection is insufficient. |
 | Store identity | Developer Elton, current free product, no accounts or billing. Account, final signing, store IDs and policy URL filled only when preparing actual distribution. |
@@ -43,3 +45,9 @@ Keep the existing debug installation for user records. A production certificate 
 - [Android native-library page-size guidance](https://developer.android.com/guide/practices/page-sizes): inspect production libraries and verify on a 16 KB environment.
 
 Recheck policies at actual submission time. Region-specific store requirements remain a distribution task, not a reason to collect additional user data in the app.
+
+## Android test commands
+
+`make test-android` runs framework-independent accounting tests with a configured JDK. CI also builds the debug APK. `make build-android-test` builds an optional AndroidX runner APK. Install the main/test APKs with signature-matched `adb install -r`; never use an installer that uninstalls the user's app on mismatch. The optional device test requires usage/notification permissions and at least 15 minutes of real Chronos use; it creates/deletes only a UUID-named temporary goal. Analytics are disabled for the runner. Inspect skipped tests rather than treating them as accepted features.
+
+On the current L60, the AndroidX process remained in `<pre-initialized>` before executing tests. Both normal and storage-compatibility attempts were stopped without clearing app data. Instrumentation therefore has no passed device result. The notification evidence above came from the actual app UI, system notification record and `cmd jobscheduler run -f`, not from a simulated threshold or a claimed successful runner. Forced execution does not validate the normal 15-minute scheduling delay.

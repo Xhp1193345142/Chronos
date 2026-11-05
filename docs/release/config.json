@@ -6,5 +6,6 @@
   "ios_real_device_verified": false,
   "android_usage_accuracy_verified": false,
   "android_background_reminders_verified": false,
-  "release_profile_verified": false
+  "release_profile_verified": false,
+  "android_profile_verified": false
 }

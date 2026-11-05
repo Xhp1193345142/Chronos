@@ -20,6 +20,7 @@ class _LiveExperienceState extends State<_LiveExperience>
   Map<String, int?> _goalUsedMinutes = {};
   String? _error;
   bool _loading = true;
+  bool _checkingGoals = false;
   bool _demo = false;
   bool _manualOnly = false;
   bool _hadUsageAccess = false;
@@ -33,6 +34,15 @@ class _LiveExperienceState extends State<_LiveExperience>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _bridge.onGoalRequested(() async {
+      if (!mounted) return;
+      setState(() {
+        _manualOnly = false;
+        _demo = false;
+        _tab = 2;
+      });
+      await _refresh();
+    });
     _loadMode();
   }
 
@@ -46,7 +56,8 @@ class _LiveExperienceState extends State<_LiveExperience>
     }
     if (!mounted) return;
     if (_manualOnly) {
-      setState(() => _loading = false);
+      await _resumeNative();
+      if (mounted && _manualOnly) setState(() => _loading = false);
     } else {
       await _refresh();
     }
@@ -74,12 +85,44 @@ class _LiveExperienceState extends State<_LiveExperience>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _bridge.onGoalRequested(null);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !_demo) _refresh();
+    if (state == AppLifecycleState.resumed) _resumeNative();
+  }
+
+  Future<void> _resumeNative() async {
+    if (_manualOnly || _demo) {
+      try {
+        final status = await _bridge.status();
+        if (!mounted || !status.openGoal) return;
+        setState(() {
+          _manualOnly = false;
+          _demo = false;
+          _tab = 2;
+        });
+      } catch (_) {
+        return;
+      }
+    }
+    await _refresh();
+  }
+
+  Future<void> _checkGoals() async {
+    if (_checkingGoals) return;
+    setState(() => _checkingGoals = true);
+    try {
+      await _bridge.checkGoalsNow();
+      await _refresh();
+      if (mounted) _message('检查完成，结果已更新。系统通知可能受勿扰设置影响。');
+    } catch (_) {
+      if (mounted) _message('检查未完成，请稍后重试。已有目标保持不变。');
+    } finally {
+      if (mounted) setState(() => _checkingGoals = false);
+    }
   }
 
   Future<void> _refresh() async {
@@ -404,7 +447,7 @@ class _LiveExperienceState extends State<_LiveExperience>
     final snapshot = _snapshot!;
     final today = snapshot.today;
     if (today == null || !today.available) {
-      final unreliable = today?.reason == 'unreliable';
+      final unreliable = today != null && today.reason != 'missing';
       final now = DateTime.now();
       return _page([
         _Eyebrow('星期${_weekday(now)} · ${now.month}月${now.day}日'),
@@ -429,9 +472,15 @@ class _LiveExperienceState extends State<_LiveExperience>
               ),
               const SizedBox(height: 15),
               Text(
-                unreliable
-                    ? '设备返回的应用时长与屏幕交互时长不一致，暂不展示今日总量。可稍后刷新，并对照系统使用时间报告。'
-                    : '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
+                switch (today?.reason) {
+                  'calendar_mismatch' =>
+                    '系统统计区间未与当天零点对齐，且事件记录不足以核对全天，因此暂不展示总量，不会把跨日统计算作今天。',
+                  'event_conflict' =>
+                    '系统前台事件存在冲突，可能涉及多窗口或缺失事件。暂不展示当天总量，也不据此发送超限提醒。',
+                  'unreliable' =>
+                    '设备返回的应用时长与屏幕交互时长不一致，暂不展示今日总量。可稍后刷新，并对照系统使用时间报告。',
+                  _ => '设备已授权。使用手机一段时间后再刷新；这里不会把缺失数据算成 0 分钟。',
+                },
                 style: TextStyle(
                   color: chronosColors(context).textSecondary,
                   height: 1.5,
@@ -498,7 +547,11 @@ class _LiveExperienceState extends State<_LiveExperience>
               ),
             ),
             const SizedBox(height: 8),
-            const _Hint('已记录应用的前台使用时长'),
+            _Hint(
+              today.source == 'android_activity_events'
+                  ? '系统前台事件 · 不含锁屏 · 非亮屏总时长'
+                  : '系统日统计 · 已核对自然日边界',
+            ),
             if (top != null) ...[
               Divider(color: chronosColors(context).border, height: 34),
               Row(
@@ -606,7 +659,13 @@ class _LiveExperienceState extends State<_LiveExperience>
         ),
       ]);
     }
-    final complete = days.where((day) => day.complete).toList();
+    final sources = days
+        .where((day) => day.complete)
+        .map((day) => day.source)
+        .toSet();
+    final complete = sources.length > 1
+        ? <_LiveDay>[]
+        : days.where((day) => day.complete).toList();
     final maxDay = complete.isEmpty
         ? null
         : complete.reduce((a, b) => a.totalMinutes >= b.totalMinutes ? a : b);
@@ -619,6 +678,7 @@ class _LiveExperienceState extends State<_LiveExperience>
           (day) =>
               day.available &&
               day.complete &&
+              day.source == selectedDay.source &&
               day.date.weekday == selectedDay.date.weekday &&
               day.date.isBefore(selectedDay.date),
         )
@@ -636,6 +696,10 @@ class _LiveExperienceState extends State<_LiveExperience>
       _ManualWeek(timer: widget.timer),
       const SizedBox(height: 27),
       const _Section('屏幕使用趋势', '来自设备 · 仅比较完整日期'),
+      if (sources.length > 1) ...[
+        const SizedBox(height: 8),
+        const _Hint('部分日期的数据来源不同，已暂停跨来源比较与周回顾。'),
+      ],
       const SizedBox(height: 17),
       if (days.any((day) => day.hourly?.length == 24)) ...[
         _chartPanel(
@@ -787,6 +851,34 @@ class _LiveExperienceState extends State<_LiveExperience>
                 fontSize: 12,
                 height: 1.5,
               ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              _status?.monitorScheduled == true
+                  ? '后台检查已安排，系统调度可能延迟。'
+                  : _goals.any((goal) => goal.enabled)
+                  ? '后台检查尚未安排，可点“立即检查”重试。'
+                  : '没有已开启的目标，后台检查已停止。',
+              style: TextStyle(
+                color: chronosColors(context).textSecondary,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: _checkingGoals ? null : _checkGoals,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: Text(_checkingGoals ? '正在检查…' : '立即检查'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  await _bridge.openNotificationSettings();
+                } catch (_) {
+                  if (mounted) _message('系统通知设置暂不可用');
+                }
+              },
+              child: const Text('系统通知设置'),
             ),
             if (_status?.notificationsGranted != true) ...[
               const SizedBox(height: 10),
@@ -1000,7 +1092,7 @@ class _LiveExperienceState extends State<_LiveExperience>
             if (goal.lastCheckedAt != null) ...[
               const SizedBox(height: 5),
               Text(
-                '后台上次检查 ${_clock(goal.lastCheckedAt)}',
+                '上次检查 ${_manualDate(goal.lastCheckedAt!)} ${_clock(goal.lastCheckedAt)} · ${_goalCheckLabel(goal.lastCheckResult)}',
                 style: TextStyle(
                   color: chronosColors(context).textSecondary,
                   fontSize: 11,
@@ -1743,19 +1835,29 @@ class _LiveDayDetails extends StatelessWidget {
       const SizedBox(height: 13),
       if (!day.available)
         Text(
-          day.reason == 'unreliable'
-              ? '系统统计与屏幕交互时长不一致，已隐藏这一天的数值。'
-              : '这一天没有可核对的记录。',
+          switch (day.reason) {
+            'unreliable' => '系统统计超出可核对范围，已隐藏这一天的数值。',
+            'calendar_mismatch' => '系统统计未对齐自然日，事件范围也不足以核对全天。',
+            'event_conflict' => '系统前台事件存在冲突，已隐藏这一天的数值。',
+            _ => '这一天没有可核对的记录。',
+          },
           style: TextStyle(
             color: chronosColors(context).textSecondary,
             height: 1.5,
           ),
         )
-      else
+      else ...[
+        _Hint(
+          day.source == 'android_activity_events'
+              ? '来源：系统前台事件，不含锁屏'
+              : '来源：已对齐自然日的系统日统计',
+        ),
+        const SizedBox(height: 8),
         _LiveAppList(
           apps: day.apps.take(5).toList(),
           totalMinutes: day.totalMinutes,
         ),
+      ],
     ],
   );
 }

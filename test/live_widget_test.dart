@@ -15,6 +15,104 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
+  testWidgets('notification intent opens real goals from manual-only mode', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'chronos_manual_only': true});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => switch (call.method) {
+            'status' => {'usageGranted': true, 'notificationsGranted': true},
+            'getGoals' => [],
+            'insightPreferences' => {'enabled': true},
+            'snapshot' => {'state': 'empty', 'days': []},
+            _ => throw MissingPluginException(call.method),
+          },
+        );
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    expect(find.text('手账'), findsOneWidget);
+    tester.binding.channelBuffers.push(
+      'chronos/native',
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('openGoal'),
+      ),
+      (_) {},
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('目标与提醒 · 设备数据'), findsOneWidget);
+    expect(find.text('演示数据'), findsNothing);
+    expect(
+      (await SharedPreferences.getInstance()).getBool('chronos_manual_only'),
+      isTrue,
+    );
+  });
+
+  testWidgets(
+    'manual goal check shows persisted outcome and scheduling state',
+    (tester) async {
+      var checks = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            switch (call.method) {
+              case 'status':
+                return {
+                  'usageGranted': true,
+                  'notificationsGranted': true,
+                  'monitorScheduled': true,
+                };
+              case 'getGoals':
+                return [
+                  {
+                    'id': 'goal-test',
+                    'name': '设备目标',
+                    'packageIds': ['test.app'],
+                    'limitMinutes': 15,
+                    'tone': '温和',
+                    'enabled': true,
+                    'lastCheckedAtMillis': checks == 0
+                        ? 0
+                        : DateTime.now().millisecondsSinceEpoch,
+                    'lastCheckResult': checks == 0
+                        ? 'never'
+                        : 'data_unavailable',
+                  },
+                ];
+              case 'insightPreferences':
+                return {'enabled': true};
+              case 'snapshot':
+                return {'state': 'empty', 'days': []};
+              case 'selectedGoalMinutes':
+                return null;
+              case 'checkGoalsNow':
+                checks++;
+                return {};
+              default:
+                throw MissingPluginException(call.method);
+            }
+          });
+      await tester.pumpWidget(const ChronosApp());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('目标').last);
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('立即检查'), 180);
+      await tester.ensureVisible(find.text('立即检查'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('后台检查已安排'), findsOneWidget);
+      await tester.tap(find.text('立即检查'));
+      await tester.pumpAndSettle();
+      expect(checks, 1);
+      await tester.scrollUntilVisible(
+        find.textContaining('当天数据无法核对，未发送提醒'),
+        -180,
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('当天数据无法核对，未发送提醒'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('denied usage shows permission gateway without device totals', (
     tester,
   ) async {

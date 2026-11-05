@@ -14,31 +14,36 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private var notificationResult: MethodChannel.Result? = null
     private var pendingOpenGoal = false
+    private var nativeChannel: MethodChannel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         pendingOpenGoal = intent?.getBooleanExtra("openGoal", false) == true
         super.onCreate(savedInstanceState)
+        runCatching { GoalStore.schedule(this) }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         pendingOpenGoal = intent.getBooleanExtra("openGoal", false)
         setIntent(intent)
+        if (pendingOpenGoal) nativeChannel?.invokeMethod("openGoal", null)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "chronos/native")
-            .setMethodCallHandler { call, result ->
+        nativeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "chronos/native")
+        nativeChannel!!.setMethodCallHandler { call, result ->
+            try {
                 when (call.method) {
                     "status" -> {
                         val openGoal = pendingOpenGoal
                         pendingOpenGoal = false
                         result.success(mapOf(
-                        "usageGranted" to UsageReader.hasAccess(this),
-                        "notificationsGranted" to notificationsGranted(),
-                        "openGoal" to openGoal,
-                        "platform" to "android",
+                            "usageGranted" to UsageReader.hasAccess(this),
+                            "notificationsGranted" to GoalChecker.notificationsAllowed(this),
+                            "monitorScheduled" to GoalStore.isScheduled(this),
+                            "openGoal" to openGoal,
+                            "platform" to "android",
                         ))
                     }
                     "openUsageSettings" -> {
@@ -51,8 +56,12 @@ class MainActivity : FlutterActivity() {
                     }
                     "openNotificationSettings" -> {
                         try {
-                            startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                .putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
+                            val settings = if (Build.VERSION.SDK_INT >= 26) {
+                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                    .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                            } else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                android.net.Uri.parse("package:$packageName"))
+                            startActivity(settings)
                             result.success(true)
                         } catch (error: Exception) {
                             result.error("settings_unavailable", error.message, null)
@@ -74,6 +83,15 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(data) }
                         } catch (error: Exception) {
                             runOnUiThread { result.error("usage_read_failed", error.message, null) }
+                        }
+                    }.start()
+                    "checkGoalsNow" -> Thread {
+                        try {
+                            GoalStore.schedule(applicationContext)
+                            val checks = GoalChecker.check(applicationContext)
+                            runOnUiThread { result.success(checks) }
+                        } catch (error: Exception) {
+                            runOnUiThread { result.error("goal_check_failed", error.message, null) }
                         }
                     }.start()
                     "getGoal" -> result.success(GoalStore.current(this))
@@ -121,7 +139,10 @@ class MainActivity : FlutterActivity() {
                     }
                     else -> result.notImplemented()
                 }
+            } catch (error: Exception) {
+                result.error("local_operation_failed", error.message, null)
             }
+        }
     }
 
     override fun onRequestPermissionsResult(

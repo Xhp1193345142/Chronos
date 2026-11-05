@@ -16,7 +16,7 @@ LOG_FILE := $(CURDIR)/build/preview-$(PORT).log
 PREVIEW_COMMAND := -m http.server $(PORT) --bind $(HOST) --directory $(WEB_DIR)
 
 .PHONY: help deps devices run-web run-android format format-check analyze test check \
-	build-web build-apk build-aab build-ios release-check icons preview-build start stop restart status logs serve doctor
+	build-web build-apk build-aab build-ios release-check release-check-android test-android build-android-test icons preview-build start stop restart status logs serve doctor
 
 help:
 	@printf '%s\n' \
@@ -32,6 +32,9 @@ help:
 	  '  make format|check           格式化代码或运行格式/分析/测试检查' \
 	  '  make build-web|build-apk    构建 Web 演示或 Android 调试 APK' \
 	  '  make release-check          查看双端发布准备检查' \
+	  '  make release-check-android  仅检查 Android 发布准备' \
+	  '  make test-android           运行 Android 原生单元测试（需要 JDK）' \
+	  '  make build-android-test     构建可选的 Android 真机测试包' \
 	  '  make build-aab              正式签名 Android App Bundle' \
 	  '  make build-ios              构建 iOS archive（需要完整 Xcode）' \
 	  '  make icons                  从品牌源图重新生成平台图标' \
@@ -156,3 +159,12 @@ build-ios:
 
 release-check:
 	$(PYTHON) tools/release_check.py
+
+release-check-android:
+	$(PYTHON) tools/release_check.py --platform android
+
+test-android:
+	android/gradlew -p android :app:testDebugUnitTest --no-daemon
+
+build-android-test:
+	android/gradlew -p android :app:assembleDebugAndroidTest --no-daemon

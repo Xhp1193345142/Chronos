@@ -26,3 +26,12 @@ jobs:
         run: flutter analyze
       - name: Test
         run: flutter test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+      - name: Android accounting tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --max-workers=2
