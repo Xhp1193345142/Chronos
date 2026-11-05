@@ -221,6 +221,12 @@ ThemeData chronosThemeData(ChronosPalette palette, Brightness brightness) {
     brightness: brightness,
     scaffoldBackgroundColor: palette.background,
     colorScheme: colors,
+    appBarTheme: AppBarTheme(
+      backgroundColor: palette.background,
+      foregroundColor: palette.textPrimary,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+    ),
     extensions: [palette],
     dividerColor: palette.border,
     textTheme: ThemeData(brightness: brightness).textTheme.apply(

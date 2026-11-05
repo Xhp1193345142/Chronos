@@ -107,10 +107,13 @@ void main() {
       expect(find.text('去河边走一走'), findsOneWidget);
       expect(find.text('保存记录'), findsNothing);
       expect(
-        (await SharedPreferences.getInstance()).getString(
-          'chronos_manual_entries_v1',
+        jsonDecode(
+          (await SharedPreferences.getInstance()).getString(
+                'chronos_manual_entries_v1',
+              ) ??
+              '[]',
         ),
-        isNull,
+        isEmpty,
       );
       expect(tester.takeException(), isNull);
       tester.state<NavigatorState>(find.byType(Navigator)).pop();
@@ -169,6 +172,34 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('iOS opens real manual journal without a screen-time plugin', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(const ChronosApp());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('timer-start')), findsOneWidget);
+    expect(find.text('演示数据'), findsNothing);
+    await tester.tap(find.text('趋势').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('timer-dock')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byTooltip('手账设置'));
+    await tester.pumpAndSettle();
+    expect(find.text('导出手账备份'), findsOneWidget);
+    await tester.ensureVisible(find.text('隐私与数据说明'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('隐私与数据说明'));
+    await tester.pumpAndSettle();
+    expect(find.text('保存在你手里的时间'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('selecting a day updates both trend charts', (tester) async {
     await tester.pumpWidget(const ChronosApp(demoOnly: true));

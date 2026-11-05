@@ -21,6 +21,7 @@ class _LiveExperienceState extends State<_LiveExperience>
   String? _error;
   bool _loading = true;
   bool _demo = false;
+  bool _manualOnly = false;
   bool _hadUsageAccess = false;
   int _refreshVersion = 0;
   int _tab = 0;
@@ -32,7 +33,42 @@ class _LiveExperienceState extends State<_LiveExperience>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _refresh();
+    _loadMode();
+  }
+
+  Future<void> _loadMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      _manualOnly = prefs.getBool('chronos_manual_only') ?? false;
+    } catch (_) {
+      _manualOnly = false;
+    }
+    if (!mounted) return;
+    if (_manualOnly) {
+      setState(() => _loading = false);
+    } else {
+      await _refresh();
+    }
+  }
+
+  Future<void> _setManualOnly(bool value) async {
+    try {
+      final saved = await (await SharedPreferences.getInstance()).setBool(
+        'chronos_manual_only',
+        value,
+      );
+      if (!saved) throw StateError('Mode preference write failed');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('切换未保存，请检查设备空间后重试。')));
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _manualOnly = value);
+    if (!value) _refresh();
   }
 
   @override
@@ -47,7 +83,7 @@ class _LiveExperienceState extends State<_LiveExperience>
   }
 
   Future<void> _refresh() async {
-    if (!mounted || _demo) return;
+    if (!mounted || _demo || _manualOnly) return;
     final version = ++_refreshVersion;
     if (_snapshot == null) setState(() => _loading = true);
     try {
@@ -112,6 +148,12 @@ class _LiveExperienceState extends State<_LiveExperience>
 
   @override
   Widget build(BuildContext context) {
+    if (_manualOnly) {
+      return _ManualExperience(
+        timer: widget.timer,
+        onConnect: () => _setManualOnly(false),
+      );
+    }
     if (_demo) return ChronosHome(timer: widget.timer, onExitDemo: _exitDemo);
     if (_loading) {
       return Scaffold(
@@ -214,6 +256,11 @@ class _LiveExperienceState extends State<_LiveExperience>
               const SizedBox(height: 24),
               _ManualToday(timer: widget.timer),
               const SizedBox(height: 30),
+              OutlinedButton(
+                onPressed: () => _setManualOnly(true),
+                child: const Text('只用时间手账'),
+              ),
+              const SizedBox(height: 24),
               const _Section('屏幕使用时间', '连接设备后显示'),
               const SizedBox(height: 12),
               _card(
@@ -1063,6 +1110,22 @@ class _LiveExperienceState extends State<_LiveExperience>
                   onTap: () {
                     Navigator.pop(sheetContext);
                     showChronosThemePicker(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.folder_outlined),
+                  title: const Text('手账备份与隐私'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _openJournalSettings(context, widget.timer);
+                  },
+                ),
+                ListTile(
+                  title: const Text('只用时间手账'),
+                  subtitle: const Text('仅切换界面，已启用的设备目标保持原设置'),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _setManualOnly(true);
                   },
                 ),
                 ListTile(

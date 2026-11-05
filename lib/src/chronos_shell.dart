@@ -27,7 +27,10 @@ class _ChronosHomeState extends State<ChronosHome> {
           constraints: const BoxConstraints(maxWidth: 610),
           child: Column(
             children: [
-              _Header(onExitDemo: widget.onExitDemo),
+              _Header(
+                onExitDemo: widget.onExitDemo,
+                onSettings: () => _openJournalSettings(context, widget.timer),
+              ),
               Expanded(
                 child: IndexedStack(
                   index: tab,

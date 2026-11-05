@@ -8,6 +8,8 @@ Chronos helps people understand where their time goes. A one-tap manual timer re
 
 ## First real release
 
+Decision recorded 2026-11-05: Elton is the developer, the current product is free, and iOS/Android are prepared together without submitting to stores. The shared release core is the independent local journal, including transactional storage, explicit backup/recovery, deletion, help and privacy. Device usage and goals remain optional platform modules with separate acceptance gates. iOS must not depend on an unimplemented screen-time bridge to open the journal. See [release readiness](release/READINESS.md).
+
 1. Put one-tap manual timing on the first screen, independent of screen-time permission; allow pause, resume, stop, category, notes, backfill, edit, delete, and local recovery.
 2. Explain and request access to system app-usage data separately.
 3. Show daily and weekly manual records and screen usage as distinct measures; never add overlapping durations into one total.

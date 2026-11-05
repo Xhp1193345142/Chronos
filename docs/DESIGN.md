@@ -10,6 +10,8 @@ Aim for the clarity and finish of a first-party mobile app while keeping Chronos
 
 Use the platform's system font, tabular figures for durations, restrained weights, aligned edges and consistent section spacing. Today opens with a date and “今天的手账.” The timer is a compact band with an immediate start action and three category shortcuts; an active timer shows duration, pause/resume and stop. Avoid large introductory cards and decorative clock faces.
 
+The first release uses Simplified Chinese, including framework date/time controls and license notices. Journal-only and connected modes share the same bottom-navigation component and palette. Settings app bars retain the selected background while scrolling; do not introduce a seed-generated tint that differs from the journal theme.
+
 The journal is the visual center. A 24-hour ruler shows genuine timed segments with fixed category colors; paused intervals remain blank. A chronological ledger pairs start/end times, a colored margin, category, note and actual duration. Cross-midnight entries show the part of the range belonging to the displayed day. The ruler encodes duration and position; ledger rows remain readable regardless of duration. Empty paper means unrecorded time, never proof that no activity occurred. Manual records and phone use retain separate headings and totals.
 
 An empty journal offers a separate read-only sample. The sample must identify its data, have no save/edit controls and never write entries into local storage. Web preview `?preview=journal` opens this sample directly. Theme controls remain available in the sample. Keep quiet borders and reserve strong color for activities, selected data and controls. Respect reduced motion and text scaling.

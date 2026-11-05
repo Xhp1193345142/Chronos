@@ -1241,6 +1241,7 @@ class _ManualEntryEditorState extends State<_ManualEntryEditor> {
                     String? error;
                     if (active) {
                       await widget.timer.setNote(widget.entry!.id, note.text);
+                      error = widget.timer.error;
                     } else {
                       error = await widget.timer.saveInterval(
                         id: widget.entry?.id,
@@ -1288,7 +1289,15 @@ class _ManualEntryEditorState extends State<_ManualEntryEditor> {
                       );
                       if (confirmed == true) {
                         await widget.timer.delete(widget.entry!.id);
-                        if (context.mounted) Navigator.pop(context);
+                        if (context.mounted) {
+                          if (widget.timer.error == null) {
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(widget.timer.error!)),
+                            );
+                          }
+                        }
                       }
                     },
                     child: Text(

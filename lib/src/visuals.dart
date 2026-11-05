@@ -537,9 +537,10 @@ class _WeeklyBars extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({this.onExitDemo});
+  const _Header({this.onExitDemo, this.onSettings});
 
   final VoidCallback? onExitDemo;
+  final VoidCallback? onSettings;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -564,6 +565,12 @@ class _Header extends StatelessWidget {
             color: chronosColors(context).textSecondary,
           ),
         ),
+        if (onSettings != null)
+          IconButton(
+            tooltip: '手账设置',
+            onPressed: onSettings,
+            icon: const Icon(Icons.settings_outlined, size: 20),
+          ),
         TextButton(
           onPressed: onExitDemo,
           style: TextButton.styleFrom(
@@ -584,12 +591,14 @@ class _Nav extends StatelessWidget {
     required this.onTap,
     required this.timer,
     required this.onTimerOpen,
+    this.journalOnly = false,
   });
 
   final int tab;
   final ValueChanged<int> onTap;
   final ManualTimerController timer;
   final VoidCallback onTimerOpen;
+  final bool journalOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -603,7 +612,7 @@ class _Nav extends StatelessWidget {
       Icons.bar_chart_rounded,
       Icons.track_changes_rounded,
     ];
-    const labels = ['今日', '趋势', '目标'];
+    final labels = journalOnly ? ['手账', '趋势'] : ['今日', '趋势', '目标'];
     return Container(
       height: 69,
       decoration: BoxDecoration(
@@ -612,7 +621,7 @@ class _Nav extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ...List.generate(3, (index) {
+          ...List.generate(labels.length, (index) {
             final active = tab == index;
             return Expanded(
               child: Semantics(

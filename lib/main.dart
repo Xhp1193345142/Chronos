@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +19,7 @@ part 'src/live_data.dart';
 part 'src/live_shell.dart';
 part 'src/manual_timer_ui.dart';
 part 'src/visuals.dart';
+part 'src/journal_settings.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -103,6 +109,9 @@ class _ChronosAppState extends State<ChronosApp> {
       onReset: _resetChoice,
       child: MaterialApp(
         title: 'Chronos · 柯罗诺斯',
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('zh', 'CN')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         debugShowCheckedModeBanner: false,
         theme: selected,
         darkTheme: _choice == ChronosThemeChoice.system
@@ -131,6 +140,8 @@ class _ChronosAppState extends State<ChronosApp> {
         },
         home: kIsWeb && Uri.base.queryParameters['preview'] == 'journal'
             ? _JournalPreview(timer: _manualTimer)
+            : !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+            ? _ManualExperience(timer: _manualTimer, onConnect: null)
             : widget.demoOnly || kIsWeb
             ? ChronosHome(timer: _manualTimer)
             : _LiveExperience(timer: _manualTimer),

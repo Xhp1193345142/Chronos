@@ -16,7 +16,7 @@ LOG_FILE := $(CURDIR)/build/preview-$(PORT).log
 PREVIEW_COMMAND := -m http.server $(PORT) --bind $(HOST) --directory $(WEB_DIR)
 
 .PHONY: help deps devices run-web run-android format format-check analyze test check \
-	build-web build-apk icons preview-build start stop restart status logs serve doctor
+	build-web build-apk build-aab build-ios release-check icons preview-build start stop restart status logs serve doctor
 
 help:
 	@printf '%s\n' \
@@ -31,6 +31,9 @@ help:
 	  '  make deps                   安装 Flutter 依赖' \
 	  '  make format|check           格式化代码或运行格式/分析/测试检查' \
 	  '  make build-web|build-apk    构建 Web 演示或 Android 调试 APK' \
+	  '  make release-check          查看双端发布准备检查' \
+	  '  make build-aab              正式签名 Android App Bundle' \
+	  '  make build-ios              构建 iOS archive（需要完整 Xcode）' \
 	  '  make icons                  从品牌源图重新生成平台图标' \
 	  '可覆盖参数：PORT=8765 HOST=127.0.0.1 FLUTTER=/path/to/flutter'
 
@@ -143,3 +146,13 @@ logs:
 
 serve: preview-build
 	$(PYTHON) $(PREVIEW_COMMAND)
+
+# Production artifacts require real signing credentials; no debug fallback.
+build-aab:
+	$(FLUTTER) build appbundle --release
+
+build-ios:
+	$(FLUTTER) build ipa --release
+
+release-check:
+	$(PYTHON) tools/release_check.py

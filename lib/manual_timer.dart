@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'storage/manual_store.dart';
+import 'storage/manual_store_platform.dart'
+    if (dart.library.io) 'storage/manual_store_native.dart'
+    as platform_store;
 
 const manualCategories = <String>[
   '未分类',
@@ -88,17 +92,76 @@ class ManualEntry {
   }
 }
 
-class ManualTimerController extends ChangeNotifier {
-  ManualTimerController({DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+/// Strict decoding is shared by migration and backup restoration. Invalid data
+/// is never converted into an empty journal and never overwrites the source.
+List<ManualEntry> decodeManualEntries(String raw) {
+  if (utf8.encode(raw).length > 8 * 1024 * 1024) {
+    throw const FormatException('备份超过 8 MB');
+  }
+  final decoded = jsonDecode(raw);
+  if (decoded is! List || decoded.length > 50000) {
+    throw const FormatException('记录格式或数量无效');
+  }
+  final entries = decoded
+      .map((value) => ManualEntry.fromJson(value as Map<String, dynamic>))
+      .toList();
+  final ids = <String>{};
+  final intervals = <ManualSegment>[];
+  for (final entry in entries) {
+    if (entry.id.isEmpty ||
+        entry.id.length > 160 ||
+        !ids.add(entry.id) ||
+        !manualCategories.contains(entry.category) ||
+        entry.note.length > 120) {
+      throw const FormatException('分类、备注或记录标识无效');
+    }
+    DateTime? previousEnd;
+    for (var i = 0; i < entry.segments.length; i++) {
+      final segment = entry.segments[i];
+      if (segment.start.year < 1970 ||
+          segment.start.year > 2100 ||
+          (segment.end != null && segment.end!.isBefore(segment.start)) ||
+          (previousEnd != null && segment.start.isBefore(previousEnd)) ||
+          (segment.end == null &&
+              (i != entry.segments.length - 1 || !entry.isActive))) {
+        throw const FormatException('计时时间段无效');
+      }
+      if (entry.completedAt != null &&
+          (segment.end == null || segment.end!.isAfter(entry.completedAt!))) {
+        throw const FormatException('结束时间无效');
+      }
+      previousEnd = segment.end;
+      if (segment.end == null || segment.end!.isAfter(segment.start)) {
+        intervals.add(segment);
+      }
+    }
+  }
+  if (entries.where((entry) => entry.isActive).length > 1) {
+    throw const FormatException('只能恢复一个计时器');
+  }
+  intervals.sort((a, b) => a.start.compareTo(b.start));
+  for (var i = 1; i < intervals.length; i++) {
+    final prior = intervals[i - 1];
+    if (prior.end == null || intervals[i].start.isBefore(prior.end!)) {
+      throw const FormatException('备份包含重叠记录');
+    }
+  }
+  return entries;
+}
 
-  static const _storageKey = 'chronos_manual_entries_v1';
+class ManualTimerController extends ChangeNotifier {
+  ManualTimerController({DateTime Function()? clock, ManualRecordStore? store})
+    : _clock = clock ?? DateTime.now,
+      _store = store ?? platform_store.createManualStore();
+
   final DateTime Function() _clock;
+  final ManualRecordStore _store;
   List<ManualEntry> _entries = [];
   Future<void>? _loadFuture;
-  Future<void> _writeTail = Future.value();
+  Future<void> _operations = Future.value();
   Timer? _ticker;
   bool _loaded = false;
+  bool _loadFailed = false;
   bool _disposed = false;
   String? _error;
   int _nextId = 0;
@@ -106,67 +169,92 @@ class ManualTimerController extends ChangeNotifier {
   bool get loaded => _loaded;
   String? get error => _error;
   List<ManualEntry> get entries => List.unmodifiable(_entries);
-  ManualEntry? get active {
-    for (final entry in _entries) {
-      if (entry.isActive) return entry;
-    }
-    return null;
-  }
-
+  ManualEntry? get active =>
+      _entries.where((entry) => entry.isActive).firstOrNull;
   DateTime get now => _clock().toUtc();
-  Future<void> flush() => _writeTail;
-
+  Future<void> flush() => _operations;
   Future<void> load() => _loadFuture ??= _load();
 
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
-      if (raw != null) {
-        final decoded = jsonDecode(raw) as List<dynamic>;
-        final entries = decoded
-            .map((item) => ManualEntry.fromJson(item as Map<String, dynamic>))
-            .toList();
-        if (entries.where((entry) => entry.isActive).length > 1) {
-          throw const FormatException('Multiple active timers');
-        }
-        _entries = entries;
-      }
+      final raw = await _store.read();
+      final entries = decodeManualEntries(raw ?? '[]');
+      // The native store migrates legacy preferences in a single transaction.
+      await _store.finishLoad(
+        jsonEncode(entries.map((entry) => entry.toJson()).toList()),
+      );
+      _entries = entries;
     } catch (_) {
-      _error = '本机计时记录暂时无法读取';
+      _loadFailed = true;
+      _error = '本机记录读取失败，原始数据已保留。请先保留应用并联系支持。';
     } finally {
       _loaded = true;
       _syncTicker();
-      notifyListeners();
+      _notify();
     }
   }
 
-  Future<bool> start({String category = '未分类'}) async {
-    await load();
-    if (!manualCategories.contains(category)) {
-      throw ArgumentError.value(category, 'category', '未知的活动分类');
+  Future<T> _run<T>(Future<T> Function() action) {
+    final result = _operations.then((_) async {
+      await load();
+      return action();
+    });
+    _operations = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
+  }
+
+  Future<bool> _commit(List<ManualEntry> next) async {
+    try {
+      final payload = jsonEncode(next.map((entry) => entry.toJson()).toList());
+      // Apply the same constraints on writes and reads. A changed clock or a
+      // full journal must never create data that cannot be loaded next time.
+      decodeManualEntries(payload);
+      await _store.write(payload);
+      _entries = next;
+      _error = null;
+      _loadFailed = false;
+      _syncTicker();
+      _notify();
+      return true;
+    } on FormatException catch (error) {
+      _error = '${error.message}，刚才的操作未生效。';
+      _notify();
+      return false;
+    } catch (_) {
+      _error = '保存失败，刚才的操作未生效。请检查设备空间后重试。';
+      _notify();
+      return false;
     }
-    if (_error != null || active != null) return false;
+  }
+
+  Future<bool> start({String category = '未分类'}) => _run(() async {
+    if (!manualCategories.contains(category)) {
+      throw ArgumentError.value(category);
+    }
+    if (_loadFailed || active != null) return false;
     final start = now;
-    _entries = [
+    return _commit([
       ManualEntry(
         id: '${start.microsecondsSinceEpoch}-${_nextId++}',
         category: category,
         segments: [ManualSegment(start, null)],
       ),
       ..._entries,
-    ];
-    _changed();
-    await flush();
-    return _error == null;
-  }
+    ]);
+  });
 
-  Future<void> pause() async {
-    await load();
+  Future<void> pause() => _run(() async {
     final current = active;
-    if (current == null || !current.isRunning) return;
+    if (_loadFailed || current == null || !current.isRunning) return;
     final end = now;
-    _replace(
+    if (end.isBefore(current.segments.last.start)) {
+      _clockError();
+      return;
+    }
+    await _replace(
       current,
       ManualEntry(
         id: current.id,
@@ -178,14 +266,16 @@ class ManualTimerController extends ChangeNotifier {
         ],
       ),
     );
-    await flush();
-  }
+  });
 
-  Future<void> resume() async {
-    await load();
+  Future<void> resume() => _run(() async {
     final current = active;
-    if (current == null || current.isRunning) return;
-    _replace(
+    if (_loadFailed || current == null || current.isRunning) return;
+    if (now.isBefore(current.segments.last.end!)) {
+      _clockError();
+      return;
+    }
+    await _replace(
       current,
       ManualEntry(
         id: current.id,
@@ -194,21 +284,25 @@ class ManualTimerController extends ChangeNotifier {
         segments: [...current.segments, ManualSegment(now, null)],
       ),
     );
-    await flush();
-  }
+  });
 
-  Future<void> stop() async {
-    await load();
+  Future<void> stop() => _run(() async {
     final current = active;
-    if (current == null) return;
+    if (_loadFailed || current == null) return;
     final end = now;
+    if (end.isBefore(
+      current.segments.last.end ?? current.segments.last.start,
+    )) {
+      _clockError();
+      return;
+    }
     final segments = current.isRunning
         ? [
             ...current.segments.take(current.segments.length - 1),
             ManualSegment(current.segments.last.start, end),
           ]
         : current.segments;
-    _replace(
+    await _replace(
       current,
       ManualEntry(
         id: current.id,
@@ -218,43 +312,46 @@ class ManualTimerController extends ChangeNotifier {
         completedAt: end,
       ),
     );
-    await flush();
-  }
+  });
 
-  Future<void> setCategory(String id, String category) async {
-    await load();
-    if (!manualCategories.contains(category)) return;
+  Future<void> setCategory(String id, String category) => _run(() async {
+    if (_loadFailed || !manualCategories.contains(category)) return;
     final current = _find(id);
-    if (current == null) return;
-    _replace(
-      current,
-      ManualEntry(
-        id: id,
-        category: category,
-        note: current.note,
-        segments: current.segments,
-        completedAt: current.completedAt,
-      ),
-    );
-    await flush();
-  }
+    if (current != null) {
+      await _replace(
+        current,
+        ManualEntry(
+          id: id,
+          category: category,
+          note: current.note,
+          segments: current.segments,
+          completedAt: current.completedAt,
+        ),
+      );
+    }
+  });
 
-  Future<void> setNote(String id, String note) async {
-    await load();
+  Future<void> setNote(String id, String note) => _run(() async {
+    if (_loadFailed) return;
     final current = _find(id);
-    if (current == null) return;
-    _replace(
-      current,
-      ManualEntry(
-        id: id,
-        category: current.category,
-        note: note.trim(),
-        segments: current.segments,
-        completedAt: current.completedAt,
-      ),
-    );
-    await flush();
-  }
+    if (note.trim().length > 120) {
+      _error = '备注最多 120 字';
+      _notify();
+      return;
+    }
+    if (current != null) {
+      await _replace(
+        current,
+        ManualEntry(
+          id: id,
+          category: current.category,
+          note: note.trim(),
+          segments: current.segments,
+          completedAt: current.completedAt,
+        ),
+      );
+    }
+  });
 
   Future<String?> saveInterval({
     String? id,
@@ -262,19 +359,16 @@ class ManualTimerController extends ChangeNotifier {
     required DateTime end,
     required String category,
     String note = '',
-  }) async {
-    await load();
-    if (_error != null) return _error;
+  }) => _run(() async {
+    if (_loadFailed) return _error;
     final from = start.toUtc();
     final to = end.toUtc();
     if (!to.isAfter(from)) return '结束时间必须晚于开始时间';
     if (to.isAfter(now)) return '结束时间不能晚于现在';
     if (!manualCategories.contains(category)) return '请选择有效分类';
-    if (_overlaps(from, to, exceptId: id)) return '这段时间已有手动记录';
+    if (note.trim().length > 120) return '备注最多 120 字';
     final old = id == null ? null : _find(id);
-    if (id != null && (old == null || old.isActive)) {
-      return '记录已不存在或仍在计时';
-    }
+    if (id != null && (old == null || old.isActive)) return '记录已不存在或仍在计时';
     final unchangedTimes =
         old != null &&
         old.startedAt.isAtSameMomentAs(from) &&
@@ -283,8 +377,9 @@ class ManualTimerController extends ChangeNotifier {
         old != null &&
         (old.segments.length > 1 ||
             !old.segments.last.end!.isAtSameMomentAs(old.endedAt!));
-    if (hasPause && !unchangedTimes) {
-      return '含暂停的记录请删除后补记，以免暂停时长被计入';
+    if (hasPause && !unchangedTimes) return '含暂停的记录请删除后补记，以免暂停时长被计入';
+    if (!unchangedTimes && _overlaps(from, to, exceptId: id)) {
+      return '这段时间已有手动记录';
     }
     final item = ManualEntry(
       id: id ?? '${now.microsecondsSinceEpoch}-${_nextId++}',
@@ -293,30 +388,123 @@ class ManualTimerController extends ChangeNotifier {
       segments: unchangedTimes ? old.segments : [ManualSegment(from, to)],
       completedAt: to,
     );
-    if (id == null) {
-      _entries = [item, ..._entries];
-      _changed();
-    } else {
-      _replace(old!, item);
+    final success = await _commit(
+      id == null
+          ? [item, ..._entries]
+          : [for (final entry in _entries) entry.id == id ? item : entry],
+    );
+    return success ? null : _error;
+  });
+
+  Future<void> delete(String id) => _run(() async {
+    if (!_loadFailed) {
+      await _commit(_entries.where((entry) => entry.id != id).toList());
     }
-    await flush();
-    return _error;
+  });
+
+  Future<bool> clear() => _run(() => _commit([]));
+
+  Future<String> exportBackup() => _run(() async {
+    if (_loadFailed) throw StateError(_error!);
+    final at = now;
+    final snapshot = _entries.map((entry) {
+      if (!entry.isActive) return entry.toJson();
+      return ManualEntry(
+        id: entry.id,
+        category: entry.category,
+        note: entry.note,
+        completedAt: at,
+        segments: entry.segments
+            .map((s) => ManualSegment(s.start, s.end ?? at))
+            .toList(),
+      ).toJson();
+    }).toList();
+    decodeManualEntries(jsonEncode(snapshot));
+    return jsonEncode({
+      'format': 'chronos.manual-backup',
+      'version': 1,
+      'exportedAt': at.toIso8601String(),
+      'entries': snapshot,
+    });
+  });
+
+  static List<ManualEntry> readBackup(String raw) {
+    if (utf8.encode(raw).length > 8 * 1024 * 1024) {
+      throw const FormatException('备份超过 8 MB');
+    }
+    final data = jsonDecode(raw);
+    if (data is! Map ||
+        data['format'] != 'chronos.manual-backup' ||
+        data['version'] != 1) {
+      throw const FormatException('不是支持的 Chronos 备份');
+    }
+    final entries = decodeManualEntries(jsonEncode(data['entries']));
+    if (entries.any((e) => e.isActive)) {
+      throw const FormatException('备份不能含运行中的计时器');
+    }
+    return entries;
   }
 
-  Future<void> delete(String id) async {
-    await load();
-    _entries = _entries.where((entry) => entry.id != id).toList();
-    _changed();
-    await flush();
+  Future<String?> importBackup(String raw) => _run(() async {
+    if (_loadFailed) return _error;
+    if (active != null) return '请先结束当前计时，再恢复备份';
+    try {
+      final incoming = readBackup(raw);
+      final combined = {for (final entry in _entries) entry.id: entry};
+      for (final entry in incoming) {
+        final old = combined[entry.id];
+        if (old != null &&
+            jsonEncode(old.toJson()) != jsonEncode(entry.toJson())) {
+          return '备份与本机存在同名记录冲突，未修改任何记录';
+        }
+        combined[entry.id] = entry;
+      }
+      final next = decodeManualEntries(
+        jsonEncode(combined.values.map((e) => e.toJson()).toList()),
+      );
+      return await _commit(next) ? null : _error;
+    } on FormatException catch (error) {
+      return error.message.toString();
+    } catch (_) {
+      return '备份文件无效，未修改任何记录';
+    }
+  });
+
+  Future<String> exportCsv() => _run(() async {
+    if (_loadFailed) throw StateError(_error!);
+    String cell(String value) {
+      // Prevent spreadsheet formula injection from user notes or imported data.
+      if (RegExp(r'^\s*[=+\-@]|^[\t\r\n]').hasMatch(value)) value = "'$value";
+      return '"${value.replaceAll('"', '""')}"';
+    }
+
+    final rows = <List<String>>[
+      ['记录ID', '分类', '备注', '开始时间UTC', '结束时间UTC', '累计秒数', '状态'],
+    ];
+    for (final e in _entries) {
+      rows.add([
+        e.id,
+        e.category,
+        e.note,
+        e.startedAt.toIso8601String(),
+        e.endedAt?.toIso8601String() ?? '',
+        e.elapsed(now).inSeconds.toString(),
+        e.isActive ? '进行中' : '已结束',
+      ]);
+    }
+    return '\uFEFF${rows.map((row) => row.map(cell).join(',')).join('\r\n')}';
+  });
+
+  void _clockError() {
+    _error = '系统时间早于已保存的计时，请校准设备时间后重试。';
+    _notify();
   }
 
-  Future<bool> clear() async {
-    await load();
-    _entries = [];
-    _error = null;
-    _changed();
-    await _writeTail;
-    return _error == null;
+  Future<bool> _replace(ManualEntry old, ManualEntry updated) => _commit([
+    for (final entry in _entries) entry.id == old.id ? updated : entry,
+  ]);
+  void _notify() {
+    if (!_disposed) notifyListeners();
   }
 
   Duration durationForDay(DateTime localDay) {
@@ -373,38 +561,9 @@ class ManualTimerController extends ChangeNotifier {
     return false;
   }
 
-  void _replace(ManualEntry old, ManualEntry updated) {
-    _entries = [
-      for (final entry in _entries) entry.id == old.id ? updated : entry,
-    ];
-    _changed();
-  }
-
-  void _changed() {
-    _error = null;
-    _syncTicker();
-    notifyListeners();
-    final snapshot = jsonEncode(
-      _entries.map((entry) => entry.toJson()).toList(),
-    );
-    _writeTail = _writeTail.then((_) async {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        if (!await prefs.setString(_storageKey, snapshot)) {
-          throw StateError('Failed to save timer records');
-        }
-      } catch (_) {
-        _error = '本机计时记录暂时无法保存';
-        if (!_disposed) notifyListeners();
-      }
-    });
-  }
-
   void _syncTicker() {
-    if (active?.isRunning == true) {
-      _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) {
-        notifyListeners();
-      });
+    if (active?.isRunning == true && !_disposed) {
+      _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) => _notify());
     } else {
       _ticker?.cancel();
       _ticker = null;
@@ -415,6 +574,11 @@ class ManualTimerController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _ticker?.cancel();
+    unawaited(
+      Future.wait([_operations, _loadFuture ?? Future<void>.value()])
+          .then((_) => _store.close())
+          .catchError((Object _) {}),
+    );
     super.dispose();
   }
 }

@@ -4,6 +4,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val releaseSigning = mapOf(
+    "storeFile" to System.getenv("CHRONOS_KEYSTORE_PATH"),
+    "storePassword" to System.getenv("CHRONOS_KEYSTORE_PASSWORD"),
+    "keyAlias" to System.getenv("CHRONOS_KEY_ALIAS"),
+    "keyPassword" to System.getenv("CHRONOS_KEY_PASSWORD"),
+)
+val hasReleaseSigning = releaseSigning.values.all { !it.isNullOrBlank() } &&
+    releaseSigning["storeFile"]?.let { file(it).isFile } == true
+
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.project == project && it.name.contains("Release") } && !hasReleaseSigning) {
+        throw GradleException("Release signing is required. Set CHRONOS_KEYSTORE_PATH, CHRONOS_KEYSTORE_PASSWORD, CHRONOS_KEY_ALIAS and CHRONOS_KEY_PASSWORD. Debug signing is never used for release builds.")
+    }
+}
+
 android {
     namespace = "com.xhp.chronos"
     compileSdk = flutter.compileSdkVersion
@@ -29,11 +44,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseSigning.getValue("storeFile")!!)
+                storePassword = releaseSigning["storePassword"]
+                keyAlias = releaseSigning["keyAlias"]
+                keyPassword = releaseSigning["keyPassword"]
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }

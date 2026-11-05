@@ -47,3 +47,14 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Private distribution credentials
+android/key.properties
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+.env
+.env.*
+!.env.example
